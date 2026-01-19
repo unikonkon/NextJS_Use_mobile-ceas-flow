@@ -1,27 +1,33 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Header, PageContainer } from '@/components/layout';
-import { SummaryBar, TransactionList, AddTransactionSheet } from '@/components/transactions';
+import { SummaryBar, TransactionList } from '@/components/transactions';
 import { MonthPicker } from '@/components/common';
 import { Button } from '@/components/ui/button';
-import { Plus, Calendar, Search, Sparkles } from 'lucide-react';
+import { Calendar, Search, Sparkles } from 'lucide-react';
 import {
   mockDailySummaries,
   mockExpenseCategories,
   mockIncomeCategories,
 } from '@/lib/mock/data';
+import { useTransactionContext } from '@/lib/contexts/transaction-context';
 import { TransactionWithCategory, DailySummary, TransactionType } from '@/types';
 
 export default function HomePage() {
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [transactions, setTransactions] = useState<TransactionWithCategory[]>(() => {
-    // Initialize with mock transactions from all daily summaries
     return mockDailySummaries.flatMap((summary) => summary.transactions);
   });
-  const [showSuccessToast, setShowSuccessToast] = useState(false);
-  const [lastAddedType, setLastAddedType] = useState<TransactionType>('expense');
   const [newTransactionIds, setNewTransactionIds] = useState<string[]>([]);
+
+  const {
+    setOnAddTransaction,
+    showSuccessToast,
+    setShowSuccessToast,
+    lastAddedType,
+    setLastAddedType,
+  } = useTransactionContext();
 
   // Calculate daily summaries from transactions
   const dailySummaries = useMemo<DailySummary[]>(() => {
@@ -44,7 +50,6 @@ export default function HomePage() {
       return acc;
     }, {} as Record<string, DailySummary>);
 
-    // Sort by date (newest first)
     return Object.values(groupedByDate).sort(
       (a, b) => b.date.getTime() - a.date.getTime()
     );
@@ -112,7 +117,13 @@ export default function HomePage() {
     setTimeout(() => {
       setNewTransactionIds((prev) => prev.filter((id) => id !== newTransaction.id));
     }, 3000);
-  }, []);
+  }, [setLastAddedType, setShowSuccessToast]);
+
+  // Register the handler with the context
+  useEffect(() => {
+    setOnAddTransaction(handleAddTransaction);
+    return () => setOnAddTransaction(null);
+  }, [handleAddTransaction, setOnAddTransaction]);
 
   return (
     <>
@@ -151,22 +162,6 @@ export default function HomePage() {
           newTransactionIds={newTransactionIds}
         />
       </PageContainer>
-
-      {/* FAB - Add Transaction */}
-      <AddTransactionSheet
-        trigger={
-          <Button
-            size="lg"
-            className="fixed bottom-20 right-4 z-40 size-14 rounded-full shadow-lg shadow-primary/25
-              hover:scale-110 active:scale-95 transition-transform duration-200"
-          >
-            <Plus className="size-6" />
-          </Button>
-        }
-        expenseCategories={mockExpenseCategories}
-        incomeCategories={mockIncomeCategories}
-        onSubmit={handleAddTransaction}
-      />
 
       {/* Success Toast */}
       <div

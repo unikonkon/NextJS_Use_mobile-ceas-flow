@@ -3,6 +3,14 @@
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { AddTransactionSheet } from '@/components/transactions';
+import { useTransactionContext } from '@/lib/contexts/transaction-context';
+import {
+  mockExpenseCategories,
+  mockIncomeCategories,
+} from '@/lib/mock/data';
 
 interface NavItem {
   href: string;
@@ -72,47 +80,78 @@ const navItems: NavItem[] = [
   },
 ];
 
-export function BottomNav() {
+function NavLink({ item }: { item: NavItem }) {
   const pathname = usePathname();
+  const isActive = pathname === item.href ||
+    (item.href !== '/' && pathname.startsWith(item.href));
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 glass border-t border-border/50 pb-safe">
-      <div className="mx-auto flex max-w-lg items-center justify-around px-2 py-2">
-        {navItems.map((item) => {
-          const isActive = pathname === item.href ||
-            (item.href !== '/' && pathname.startsWith(item.href));
+    <Link
+      href={item.href}
+      className={cn(
+        'relative flex flex-col items-center justify-center gap-1 rounded-2xl px-3 transition-all duration-300',
+        isActive
+          ? 'text-primary py-1'
+          : 'text-muted-foreground hover:text-foreground py-2'
+      )}
+    >
+      {isActive && (
+        <span className="absolute inset-0 rounded-2xl bg-primary/10 animate-scale-in" />
+      )}
+      <span className="relative z-10">
+        {isActive ? item.activeIcon : item.icon}
+      </span>
+      <span className={cn(
+        'relative z-10 text-[10px] font-medium tracking-wide',
+        isActive && 'font-semibold'
+      )}>
+        {item.label}
+      </span>
+    </Link>
+  );
+}
 
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                'relative flex flex-col items-center justify-center gap-1 rounded-2xl px-4 py-2 transition-all duration-300',
-                isActive
-                  ? 'text-primary'
-                  : 'text-muted-foreground hover:text-foreground'
-              )}
-            >
-              {/* Active indicator */}
-              {isActive && (
-                <span className="absolute inset-0 rounded-2xl bg-primary/10 animate-scale-in" />
-              )}
+export function BottomNav() {
+  const { onAddTransaction } = useTransactionContext();
 
-              {/* Icon */}
-              <span className="relative z-10">
-                {isActive ? item.activeIcon : item.icon}
-              </span>
+  const leftItems = navItems.slice(0, 2);
+  const rightItems = navItems.slice(2, 4);
 
-              {/* Label */}
-              <span className={cn(
-                'relative z-10 text-[10px] font-medium tracking-wide',
-                isActive && 'font-semibold'
-              )}>
-                {item.label}
-              </span>
-            </Link>
-          );
-        })}
+  return (
+    <nav className="fixed bottom-0 left-0 right-0 z-50 glass border-t border-border/50">
+      <div className="mx-auto flex max-w-lg items-center justify-between px-2 ">
+        {/* Left nav items */}
+        <div className="flex items-center justify-around flex-1">
+          {leftItems.map((item) => (
+            <NavLink key={item.href} item={item} />
+          ))}
+        </div>
+
+        {/* Center FAB - Add Transaction */}
+        <div className="relative flex items-center justify-center px-2">
+          <AddTransactionSheet
+            trigger={
+              <Button
+                size="lg"
+                className="relative -top-5 size-14 rounded-full shadow-lg shadow-primary/25
+                  hover:scale-110 active:scale-95 transition-transform duration-200
+                  bg-primary hover:bg-primary/90"
+              >
+                <Plus className="size-6" />
+              </Button>
+            }
+            expenseCategories={mockExpenseCategories}
+            incomeCategories={mockIncomeCategories}
+            onSubmit={onAddTransaction || (() => { })}
+          />
+        </div>
+
+        {/* Right nav items */}
+        <div className="flex items-center justify-around flex-1">
+          {rightItems.map((item) => (
+            <NavLink key={item.href} item={item} />
+          ))}
+        </div>
       </div>
     </nav>
   );
