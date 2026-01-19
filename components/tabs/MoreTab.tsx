@@ -4,46 +4,57 @@ import { Header, PageContainer } from '@/components/layout';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ChevronRight, Crown } from 'lucide-react';
-import Link from 'next/link';
 
 const menuSections = [
   {
     title: 'จัดการข้อมูล',
     items: [
-      { icon: '📁', label: 'หมวดหมู่', href: '/more/categories' },
-      { icon: '💰', label: 'งบประมาณ', href: '/more/budgets' },
-      { icon: '🎯', label: 'เป้าหมายการออม', href: '/more/goals' },
-      { icon: '🔄', label: 'บิลประจำงวด', href: '/more/recurring' },
-      { icon: '🔔', label: 'เตือนความจำ', href: '/more/reminders' },
+      { icon: '📁', label: 'หมวดหมู่', id: 'categories' },
+      { icon: '💰', label: 'งบประมาณ', id: 'budgets' },
+      { icon: '🎯', label: 'เป้าหมายการออม', id: 'goals' },
+      { icon: '🔄', label: 'บิลประจำงวด', id: 'recurring' },
+      { icon: '🔔', label: 'เตือนความจำ', id: 'reminders' },
     ],
   },
   {
     title: 'หนังสือและสมาชิก',
     items: [
-      { icon: '📒', label: 'จัดการหนังสือ', href: '/more/books' },
-      { icon: '👥', label: 'สมาชิก', href: '/more/members' },
+      { icon: '📒', label: 'จัดการหนังสือ', id: 'books' },
+      { icon: '👥', label: 'สมาชิก', id: 'members' },
     ],
   },
   {
     title: 'เครื่องมือ',
     items: [
-      { icon: '💱', label: 'แลกเปลี่ยนเงินตรา', href: '/more/currency' },
-      { icon: '📊', label: 'ส่งออก Excel', href: '/more/export' },
-      { icon: '🔍', label: 'ค้นหา', href: '/more/search' },
-      { icon: '☁️', label: 'สำรองข้อมูล', href: '/more/backup' },
+      { icon: '💱', label: 'แลกเปลี่ยนเงินตรา', id: 'currency' },
+      { icon: '📊', label: 'ส่งออก Excel', id: 'export' },
+      { icon: '🔍', label: 'ค้นหา', id: 'search' },
+      { icon: '☁️', label: 'สำรองข้อมูล', id: 'backup' },
     ],
   },
   {
     title: 'อื่นๆ',
     items: [
-      { icon: '⚙️', label: 'ตั้งค่า', href: '/more/settings' },
-      { icon: '❓', label: 'ช่วยเหลือ', href: '/more/help' },
-      { icon: '📝', label: 'ข้อเสนอแนะ', href: '/more/feedback' },
+      { icon: '⚙️', label: 'ตั้งค่า', id: 'settings' },
+      { icon: '❓', label: 'ช่วยเหลือ', id: 'help' },
+      { icon: '📝', label: 'ข้อเสนอแนะ', id: 'feedback' },
     ],
   },
 ];
 
-export default function MorePage() {
+interface MoreTabProps {
+  onMenuClick?: (menuId: string) => void;
+}
+
+export function MoreTab({ onMenuClick }: MoreTabProps) {
+  const handleMenuClick = (id: string) => {
+    if (onMenuClick) {
+      onMenuClick(id);
+    } else {
+      console.log('Menu clicked:', id);
+    }
+  };
+
   return (
     <>
       <Header title="เพิ่มเติม" />
@@ -93,15 +104,15 @@ export default function MorePage() {
             </h3>
             <Card className="divide-y divide-border">
               {section.items.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="flex items-center gap-3 p-3 transition-colors hover:bg-accent/50"
+                <button
+                  key={item.id}
+                  onClick={() => handleMenuClick(item.id)}
+                  className="flex w-full items-center gap-3 p-3 transition-colors hover:bg-accent/50 text-left"
                 >
                   <span className="text-xl">{item.icon}</span>
                   <span className="flex-1 font-medium">{item.label}</span>
                   <ChevronRight className="size-4 text-muted-foreground" />
-                </Link>
+                </button>
               ))}
             </Card>
           </div>

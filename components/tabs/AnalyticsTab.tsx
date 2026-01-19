@@ -8,7 +8,7 @@ import { Card } from '@/components/ui/card';
 import { mockExpenseSummaries, mockIncomeSummaries, mockMonthlySummary } from '@/lib/mock/data';
 import { formatCurrency } from '@/lib/utils/format';
 
-export default function AnalyticsPage() {
+export function AnalyticsTab() {
   const [selectedMonth, setSelectedMonth] = useState(new Date());
 
   return (

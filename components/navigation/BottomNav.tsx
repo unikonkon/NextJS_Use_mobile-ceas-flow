@@ -1,8 +1,6 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AddTransactionSheet } from '@/components/transactions';
@@ -11,9 +9,10 @@ import {
   mockExpenseCategories,
   mockIncomeCategories,
 } from '@/lib/mock/data';
+import { TabType } from '@/hooks/useTabNavigation';
 
 interface NavItem {
-  href: string;
+  id: TabType;
   icon: React.ReactNode;
   activeIcon: React.ReactNode;
   label: string;
@@ -21,7 +20,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   {
-    href: '/',
+    id: 'home',
     icon: (
       <svg className="size-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
@@ -35,7 +34,7 @@ const navItems: NavItem[] = [
     label: 'หนังสือ',
   },
   {
-    href: '/wallets',
+    id: 'wallets',
     icon: (
       <svg className="size-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a2.25 2.25 0 0 0-2.25-2.25H15a3 3 0 1 1-6 0H5.25A2.25 2.25 0 0 0 3 12m18 0v6a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 9m18 0V6a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 6v3" />
@@ -49,7 +48,7 @@ const navItems: NavItem[] = [
     label: 'กระเป๋าเงิน',
   },
   {
-    href: '/analytics',
+    id: 'analytics',
     icon: (
       <svg className="size-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6a7.5 7.5 0 1 0 7.5 7.5h-7.5V6Z" />
@@ -65,7 +64,7 @@ const navItems: NavItem[] = [
     label: 'การวิเคราะห์',
   },
   {
-    href: '/more',
+    id: 'more',
     icon: (
       <svg className="size-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM12.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM18.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
@@ -80,14 +79,16 @@ const navItems: NavItem[] = [
   },
 ];
 
-function NavLink({ item }: { item: NavItem }) {
-  const pathname = usePathname();
-  const isActive = pathname === item.href ||
-    (item.href !== '/' && pathname.startsWith(item.href));
+interface NavButtonProps {
+  item: NavItem;
+  isActive: boolean;
+  onClick: () => void;
+}
 
+function NavButton({ item, isActive, onClick }: NavButtonProps) {
   return (
-    <Link
-      href={item.href}
+    <button
+      onClick={onClick}
       className={cn(
         'relative flex flex-col items-center justify-center gap-1 rounded-2xl px-3 transition-all duration-300',
         isActive
@@ -107,23 +108,33 @@ function NavLink({ item }: { item: NavItem }) {
       )}>
         {item.label}
       </span>
-    </Link>
+    </button>
   );
 }
 
-export function BottomNav() {
+interface BottomNavProps {
+  activeTab: TabType;
+  onTabChange: (tab: TabType) => void;
+}
+
+export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
   const { onAddTransaction } = useTransactionContext();
 
   const leftItems = navItems.slice(0, 2);
   const rightItems = navItems.slice(2, 4);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 glass border-t border-border/50">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 glass border-t border-border/50 pb-safe">
       <div className="mx-auto flex max-w-lg items-center justify-between px-2 ">
         {/* Left nav items */}
         <div className="flex items-center justify-around flex-1">
           {leftItems.map((item) => (
-            <NavLink key={item.href} item={item} />
+            <NavButton
+              key={item.id}
+              item={item}
+              isActive={activeTab === item.id}
+              onClick={() => onTabChange(item.id)}
+            />
           ))}
         </div>
 
@@ -149,7 +160,12 @@ export function BottomNav() {
         {/* Right nav items */}
         <div className="flex items-center justify-around flex-1">
           {rightItems.map((item) => (
-            <NavLink key={item.href} item={item} />
+            <NavButton
+              key={item.id}
+              item={item}
+              isActive={activeTab === item.id}
+              onClick={() => onTabChange(item.id)}
+            />
           ))}
         </div>
       </div>

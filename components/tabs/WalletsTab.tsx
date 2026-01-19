@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Plus, Settings } from 'lucide-react';
 import { mockWallets, mockWalletSummary } from '@/lib/mock/data';
 
-export default function WalletsPage() {
+export function WalletsTab() {
   return (
     <>
       <Header
