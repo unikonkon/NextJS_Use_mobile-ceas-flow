@@ -199,7 +199,7 @@ export function AddTransactionSheet({
           {/* Decorative gradient background */}
           <div
             className={cn(
-              "absolute inset-0 h-32 opacity-20 transition-all duration-500",
+              "absolute inset-0 h-32 opacity-20 transition-all duration-100",
               transactionType === 'expense' && "bg-linear-to-b from-expense via-expense/50 to-transparent",
               transactionType === 'income' && "bg-linear-to-b from-income via-income/50 to-transparent",
               transactionType === 'transfer' && "bg-linear-to-b from-transfer via-transfer/50 to-transparent"
