@@ -25,6 +25,7 @@ export const metadata: Metadata = {
     icon: [
       { url: "/icons/icon-32x32.png", sizes: "32x32", type: "image/png" },
       { url: "/icons/icon-96x96.png", sizes: "96x96", type: "image/png" },
+      { url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
     ],
     apple: [
       { url: "/icons/icon-180x180.png", sizes: "180x180", type: "image/png" },
@@ -34,6 +35,9 @@ export const metadata: Metadata = {
   },
   other: {
     "mobile-web-app-capable": "yes",
+  },
+  formatDetection: {
+    telephone: false,
   },
 };
 
@@ -56,6 +60,22 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="th" suppressHydrationWarning>
+      <head>
+        {/* Critical iOS PWA meta tags - must be in <head> for iOS Safari */}
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="CEAS Flow" />
+
+        {/* Apple Touch Icons for all iOS devices */}
+        <link rel="apple-touch-icon" href="/icons/icon-180x180.png" />
+        <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
+        <link rel="apple-touch-icon" sizes="120x120" href="/icons/icon-120x120.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180x180.png" />
+
+        {/* Preconnect for performance */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} font-mono antialiased dark`}
       >
