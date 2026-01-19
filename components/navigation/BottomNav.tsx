@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AddTransactionSheet } from '@/components/transactions';
-import { useTransactionContext } from '@/lib/contexts/transaction-context';
+import { useTransactionStore } from '@/lib/stores';
 import {
   mockExpenseCategories,
   mockIncomeCategories,
@@ -118,7 +118,7 @@ interface BottomNavProps {
 }
 
 export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
-  const { onAddTransaction } = useTransactionContext();
+  const addTransaction = useTransactionStore((s) => s.addTransaction);
 
   const leftItems = navItems.slice(0, 2);
   const rightItems = navItems.slice(2, 4);
@@ -153,7 +153,7 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
             }
             expenseCategories={mockExpenseCategories}
             incomeCategories={mockIncomeCategories}
-            onSubmit={onAddTransaction || (() => { })}
+            onSubmit={addTransaction}
           />
         </div>
 
