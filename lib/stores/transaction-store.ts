@@ -81,7 +81,9 @@ interface TransactionStore {
   // Actions
   loadTransactions: () => Promise<void>;
   addTransaction: (input: TransactionInput) => Promise<void>;
+  updateTransaction: (id: string, input: Partial<TransactionInput>) => Promise<void>;
   deleteTransaction: (id: string) => Promise<void>;
+  getTransactionById: (id: string) => TransactionWithCategory | undefined;
   setSelectedMonth: (date: Date) => void;
   hideToast: () => void;
 }
@@ -255,6 +257,70 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
     }, 3000);
   },
 
+  updateTransaction: async (id, input) => {
+    const categoryStore = useCategoryStore.getState();
+    const existingTransaction = get().transactions.find((t) => t.id === id);
+    if (!existingTransaction) return;
+
+    // Get new category if changed
+    const category = input.categoryId
+      ? categoryStore.getCategoryById(input.categoryId)
+      : existingTransaction.category;
+    if (!category) return;
+
+    const now = new Date();
+    const updatedTransaction: TransactionWithCategory = {
+      ...existingTransaction,
+      type: input.type ?? existingTransaction.type,
+      amount: input.amount ?? existingTransaction.amount,
+      categoryId: input.categoryId ?? existingTransaction.categoryId,
+      date: input.date ?? existingTransaction.date,
+      note: input.note !== undefined ? input.note : existingTransaction.note,
+      category,
+      updatedAt: now,
+    };
+
+    // Update Zustand state immediately
+    const transactions = get().transactions.map((t) =>
+      t.id === id ? updatedTransaction : t
+    );
+    const selectedMonth = get().selectedMonth;
+
+    set({
+      transactions,
+      dailySummaries: computeDailySummaries(transactions),
+      monthlySummary: computeMonthlySummary(transactions, selectedMonth),
+      toastVisible: true,
+      toastType: updatedTransaction.type,
+    });
+
+    // Persist to IndexedDB
+    try {
+      await db.transactions.put(
+        toStoredTransaction({
+          id: updatedTransaction.id,
+          bookId: updatedTransaction.bookId,
+          walletId: updatedTransaction.walletId,
+          categoryId: updatedTransaction.categoryId,
+          type: updatedTransaction.type,
+          amount: updatedTransaction.amount,
+          currency: updatedTransaction.currency,
+          date: updatedTransaction.date,
+          note: updatedTransaction.note,
+          createdAt: updatedTransaction.createdAt,
+          updatedAt: updatedTransaction.updatedAt,
+        })
+      );
+    } catch (error) {
+      console.error('Failed to update transaction:', error);
+    }
+
+    // Auto hide toast
+    setTimeout(() => {
+      set({ toastVisible: false });
+    }, 2500);
+  },
+
   deleteTransaction: async (id: string) => {
     const transactions = get().transactions.filter((t) => t.id !== id);
     const selectedMonth = get().selectedMonth;
@@ -272,6 +338,10 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
     } catch (error) {
       console.error('Failed to delete transaction:', error);
     }
+  },
+
+  getTransactionById: (id: string) => {
+    return get().transactions.find((t) => t.id === id);
   },
 
   setSelectedMonth: (date) => {

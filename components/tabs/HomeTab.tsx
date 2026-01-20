@@ -1,14 +1,20 @@
 'use client';
 
+import { useState } from 'react';
 import { Header, PageContainer } from '@/components/layout';
-import { SummaryBar, TransactionList } from '@/components/transactions';
+import { SummaryBar, TransactionList, EditTransactionSheet } from '@/components/transactions';
 import { MonthPicker } from '@/components/common';
 import { Button } from '@/components/ui/button';
 import { Calendar, Search, Sparkles } from 'lucide-react';
-import { useTransactionStore } from '@/lib/stores';
+import { useTransactionStore, useCategoryStore } from '@/lib/stores';
+import { TransactionWithCategory } from '@/types';
 
 export function HomeTab() {
-  // Select individual values from store (not computed selectors)
+  // Edit sheet state
+  const [editingTransaction, setEditingTransaction] = useState<TransactionWithCategory | null>(null);
+  const [editSheetOpen, setEditSheetOpen] = useState(false);
+
+  // Store selectors
   const selectedMonth = useTransactionStore((s) => s.selectedMonth);
   const setSelectedMonth = useTransactionStore((s) => s.setSelectedMonth);
   const newTransactionIds = useTransactionStore((s) => s.newTransactionIds);
@@ -16,6 +22,28 @@ export function HomeTab() {
   const monthlySummary = useTransactionStore((s) => s.monthlySummary);
   const toastVisible = useTransactionStore((s) => s.toastVisible);
   const toastType = useTransactionStore((s) => s.toastType);
+  const getTransactionById = useTransactionStore((s) => s.getTransactionById);
+  const updateTransaction = useTransactionStore((s) => s.updateTransaction);
+  const deleteTransaction = useTransactionStore((s) => s.deleteTransaction);
+
+  // Category store
+  const expenseCategories = useCategoryStore((s) => s.expenseCategories);
+  const incomeCategories = useCategoryStore((s) => s.incomeCategories);
+
+  const handleTransactionClick = (id: string) => {
+    const transaction = getTransactionById(id);
+    if (transaction) {
+      setEditingTransaction(transaction);
+      setEditSheetOpen(true);
+    }
+  };
+
+  const handleEditSheetChange = (open: boolean) => {
+    setEditSheetOpen(open);
+    if (!open) {
+      setEditingTransaction(null);
+    }
+  };
 
   return (
     <>
@@ -50,10 +78,21 @@ export function HomeTab() {
         {/* Transaction List */}
         <TransactionList
           dailySummaries={dailySummaries}
-          onTransactionClick={(id) => console.log('Transaction clicked:', id)}
+          onTransactionClick={handleTransactionClick}
           newTransactionIds={newTransactionIds}
         />
       </PageContainer>
+
+      {/* Edit Transaction Sheet */}
+      <EditTransactionSheet
+        transaction={editingTransaction}
+        open={editSheetOpen}
+        onOpenChange={handleEditSheetChange}
+        expenseCategories={expenseCategories}
+        incomeCategories={incomeCategories}
+        onUpdate={updateTransaction}
+        onDelete={deleteTransaction}
+      />
 
       {/* Success Toast */}
       <div
@@ -74,8 +113,8 @@ export function HomeTab() {
         >
           <Sparkles className="size-5 animate-pulse" />
           <span className="font-medium">
-            {toastType === 'income' ? 'เพิ่มรายรับสำเร็จ!' :
-             toastType === 'expense' ? 'เพิ่มรายจ่ายสำเร็จ!' :
+            {toastType === 'income' ? 'บันทึกสำเร็จ!' :
+             toastType === 'expense' ? 'บันทึกสำเร็จ!' :
              'โอนเงินสำเร็จ!'}
           </span>
         </div>
