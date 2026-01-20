@@ -189,7 +189,7 @@ export function AddTransactionSheet({
       <SheetTrigger asChild>{trigger}</SheetTrigger>
       <SheetContent
         side="bottom"
-        className="h-[80vh] rounded-t-[2rem] px-0 pb-0 overflow-hidden border-t-0"
+        className="h-[77vh] rounded-t-[2rem] px-0 pb-0 overflow-hidden border-t-0"
       >
         {/* Hidden title for accessibility */}
         <SheetTitle className="sr-only">เพิ่มรายการ</SheetTitle>
@@ -360,7 +360,7 @@ export function AddTransactionSheet({
               {/* Main Amount Display */}
               <div className={cn(
                 "flex items-baseline justify-end gap-1 pt-4",
-                selectedCategory && "pt-8"
+                selectedCategory && ""
               )}>
                 <span className={cn(
                   "text-xl font-medium transition-colors",
@@ -411,7 +411,6 @@ export function AddTransactionSheet({
             <div className="grid grid-cols-4 gap-1.5">
               {/* Row 1 */}
               <CalcButton label="C" onClick={handleClear} variant="secondary" />
-              <CalcButton label="⌫" onClick={handleBackspace} variant="secondary" />
               <CalcButton
                 label="÷"
                 onClick={() => handleOperation('÷')}
@@ -424,6 +423,7 @@ export function AddTransactionSheet({
                 variant="secondary"
                 isActive={operation === '×'}
               />
+              <CalcButton label="⌫" onClick={handleBackspace} variant="secondary" />
 
               {/* Row 2 */}
               <CalcButton label="7" onClick={() => handleNumber('7')} />

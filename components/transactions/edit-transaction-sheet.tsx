@@ -218,7 +218,7 @@ export function EditTransactionSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="bottom"
-        className="h-[85vh] rounded-t-[2rem] px-0 pb-0 overflow-hidden border-t-0"
+        className="h-[77vh] rounded-t-[2rem] px-0 pb-0 overflow-hidden border-t-0"
       >
         <SheetTitle className="sr-only">แก้ไขรายการ</SheetTitle>
 
@@ -395,10 +395,10 @@ export function EditTransactionSheet({
           </div>
 
           {/* Amount Display */}
-          <div className="px-4 py-3">
+          <div className="px-4 ">
             <div
               className={cn(
-                "relative overflow-hidden rounded-2xl p-4 transition-all",
+                "relative overflow-hidden rounded-2xl px-3 pb-safe pt-3 transition-all",
                 "bg-linear-to-br from-card to-muted/20",
                 "border border-border/50 shadow-sm"
               )}
@@ -489,7 +489,6 @@ export function EditTransactionSheet({
             <div className="grid grid-cols-4 gap-1.5">
               {/* Row 1 */}
               <CalcButton label="C" onClick={handleClear} variant="secondary" />
-              <CalcButton label="⌫" onClick={handleBackspace} variant="secondary" />
               <CalcButton
                 label="÷"
                 onClick={() => handleOperation('÷')}
@@ -502,6 +501,7 @@ export function EditTransactionSheet({
                 variant="secondary"
                 isActive={operation === '×'}
               />
+              <CalcButton label="⌫" onClick={handleBackspace} variant="secondary" />
 
               {/* Row 2 */}
               <CalcButton label="7" onClick={() => handleNumber('7')} />

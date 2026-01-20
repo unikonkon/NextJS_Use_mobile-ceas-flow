@@ -122,7 +122,7 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
   const rightItems = navItems.slice(2, 4);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 glass border-t border-border/50 pb-safe">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border/50 pb-safe">
       <div className="mx-auto flex max-w-lg items-center justify-between px-2 ">
         {/* Left nav items */}
         <div className="flex items-center justify-around flex-1">

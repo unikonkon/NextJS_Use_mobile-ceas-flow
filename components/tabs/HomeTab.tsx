@@ -45,6 +45,9 @@ export function HomeTab() {
     }
   };
 
+  // console.log("newTransactionIds", newTransactionIds);
+  // console.log("dailySummaries", dailySummaries);
+
   return (
     <>
       <Header
