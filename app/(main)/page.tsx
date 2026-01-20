@@ -3,6 +3,7 @@
 import { useTabNavigation } from '@/hooks/useTabNavigation';
 import { HomeTab, AnalyticsTab, WalletsTab, MoreTab } from '@/components/tabs';
 import { BottomNav } from '@/components/navigation';
+import { StoreProvider } from '@/components/providers';
 
 export default function MainPage() {
   const { activeTab, setActiveTab } = useTabNavigation('home');
@@ -23,9 +24,9 @@ export default function MainPage() {
   };
 
   return (
-    <>
+    <StoreProvider>
       {renderTabContent()}
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
-    </>
+    </StoreProvider>
   );
 }

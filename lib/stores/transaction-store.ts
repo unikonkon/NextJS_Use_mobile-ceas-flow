@@ -4,13 +4,10 @@ import {
   TransactionInput,
   TransactionType,
   DailySummary,
-  Category,
 } from '@/types';
-import {
-  mockDailySummaries,
-  mockExpenseCategories,
-  mockIncomeCategories,
-} from '@/lib/mock/data';
+import { db, toStoredTransaction, fromStoredTransaction } from './db';
+import { useCategoryStore } from './category-store';
+import { mockTransactions } from '@/lib/mock/data';
 
 // ============================================
 // Helper Functions
@@ -69,6 +66,8 @@ interface TransactionStore {
   // Data
   transactions: TransactionWithCategory[];
   newTransactionIds: string[];
+  isLoading: boolean;
+  isInitialized: boolean;
 
   // Computed (stored to avoid recalculation)
   dailySummaries: DailySummary[];
@@ -80,39 +79,115 @@ interface TransactionStore {
   toastType: TransactionType;
 
   // Actions
-  addTransaction: (input: TransactionInput) => void;
+  loadTransactions: () => Promise<void>;
+  addTransaction: (input: TransactionInput) => Promise<void>;
+  deleteTransaction: (id: string) => Promise<void>;
   setSelectedMonth: (date: Date) => void;
   hideToast: () => void;
 }
-
-// ============================================
-// Initial Data
-// ============================================
-const initialTransactions = mockDailySummaries.flatMap(
-  (summary) => summary.transactions
-);
-const initialMonth = new Date();
 
 // ============================================
 // Create Store
 // ============================================
 export const useTransactionStore = create<TransactionStore>((set, get) => ({
   // Initial State
-  transactions: initialTransactions,
+  transactions: [],
   newTransactionIds: [],
-  dailySummaries: computeDailySummaries(initialTransactions),
-  monthlySummary: computeMonthlySummary(initialTransactions, initialMonth),
-  selectedMonth: initialMonth,
+  isLoading: false,
+  isInitialized: false,
+  dailySummaries: [],
+  monthlySummary: { income: 0, expense: 0, balance: 0 },
+  selectedMonth: new Date(),
   toastVisible: false,
   toastType: 'expense',
 
   // Actions
-  addTransaction: (input) => {
-    const allCategories: Category[] = [
-      ...mockExpenseCategories,
-      ...mockIncomeCategories,
-    ];
-    const category = allCategories.find((c) => c.id === input.categoryId);
+  loadTransactions: async () => {
+    // Prevent multiple loads
+    if (get().isLoading || get().isInitialized) return;
+
+    set({ isLoading: true });
+
+    try {
+      // Ensure categories are loaded first
+      const categoryStore = useCategoryStore.getState();
+      if (!categoryStore.isInitialized) {
+        await categoryStore.loadCategories();
+      }
+
+      // Load from IndexedDB
+      const storedTransactions = await db.transactions
+        .orderBy('date')
+        .reverse()
+        .toArray();
+
+      if (storedTransactions.length === 0) {
+        // Seed with mock data on first run
+        const baseTransactions = mockTransactions.map((t) => ({
+          id: t.id,
+          bookId: t.bookId,
+          walletId: t.walletId,
+          categoryId: t.categoryId,
+          type: t.type,
+          amount: t.amount,
+          currency: t.currency,
+          date: t.date,
+          note: t.note,
+          createdAt: t.createdAt,
+          updatedAt: t.updatedAt,
+        }));
+
+        // Store to IndexedDB
+        await db.transactions.bulkPut(
+          baseTransactions.map(toStoredTransaction)
+        );
+
+        // Build TransactionWithCategory using category store
+        const transactionsWithCategory: TransactionWithCategory[] = mockTransactions.map((t) => {
+          const category = categoryStore.getCategoryById(t.categoryId);
+          return {
+            ...t,
+            category: category || t.category,
+          };
+        });
+
+        const selectedMonth = get().selectedMonth;
+        set({
+          transactions: transactionsWithCategory,
+          dailySummaries: computeDailySummaries(transactionsWithCategory),
+          monthlySummary: computeMonthlySummary(transactionsWithCategory, selectedMonth),
+          isLoading: false,
+          isInitialized: true,
+        });
+      } else {
+        // Convert stored transactions and attach categories
+        const transactions = storedTransactions.map((s) => {
+          const base = fromStoredTransaction(s);
+          const category = categoryStore.getCategoryById(s.categoryId);
+          return {
+            ...base,
+            category: category!,
+          } as TransactionWithCategory;
+        }).filter((t) => t.category); // Filter out transactions with missing categories
+
+        const selectedMonth = get().selectedMonth;
+        set({
+          transactions,
+          dailySummaries: computeDailySummaries(transactions),
+          monthlySummary: computeMonthlySummary(transactions, selectedMonth),
+          isLoading: false,
+          isInitialized: true,
+        });
+      }
+    } catch (error) {
+      console.error('Failed to load transactions:', error);
+      set({ isLoading: false, isInitialized: true });
+    }
+  },
+
+  addTransaction: async (input) => {
+    const categoryStore = useCategoryStore.getState();
+    const category = categoryStore.getCategoryById(input.categoryId);
     if (!category) return;
 
     const now = input.date ?? new Date();
@@ -131,6 +206,7 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
       updatedAt: now,
     };
 
+    // Update Zustand state immediately for fast UI
     const newTransactions = [newTransaction, ...get().transactions];
     const selectedMonth = get().selectedMonth;
 
@@ -142,6 +218,27 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
       toastVisible: true,
       toastType: input.type,
     });
+
+    // Persist to IndexedDB (async, non-blocking)
+    try {
+      await db.transactions.put(
+        toStoredTransaction({
+          id: newTransaction.id,
+          bookId: newTransaction.bookId,
+          walletId: newTransaction.walletId,
+          categoryId: newTransaction.categoryId,
+          type: newTransaction.type,
+          amount: newTransaction.amount,
+          currency: newTransaction.currency,
+          date: newTransaction.date,
+          note: newTransaction.note,
+          createdAt: newTransaction.createdAt,
+          updatedAt: newTransaction.updatedAt,
+        })
+      );
+    } catch (error) {
+      console.error('Failed to persist transaction:', error);
+    }
 
     // Auto hide toast
     setTimeout(() => {
@@ -156,6 +253,25 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
         ),
       }));
     }, 3000);
+  },
+
+  deleteTransaction: async (id: string) => {
+    const transactions = get().transactions.filter((t) => t.id !== id);
+    const selectedMonth = get().selectedMonth;
+
+    // Update Zustand state immediately
+    set({
+      transactions,
+      dailySummaries: computeDailySummaries(transactions),
+      monthlySummary: computeMonthlySummary(transactions, selectedMonth),
+    });
+
+    // Delete from IndexedDB
+    try {
+      await db.transactions.delete(id);
+    } catch (error) {
+      console.error('Failed to delete transaction:', error);
+    }
   },
 
   setSelectedMonth: (date) => {
