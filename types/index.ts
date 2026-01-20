@@ -41,15 +41,8 @@ export type CategoryType = 'expense' | 'income';
 
 export interface Category {
   id: string;
-  bookId?: string;
   name: string;
   type: CategoryType;
-  icon: string;
-  color: string;
-  parentId?: string;
-  sortOrder: number;
-  isSystem: boolean;
-  createdAt: Date;
 }
 
 export interface CategorySummary {

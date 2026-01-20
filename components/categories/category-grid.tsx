@@ -2,7 +2,6 @@
 
 import { cn } from '@/lib/utils';
 import { Category } from '@/types';
-import { CategoryIcon } from './category-icon';
 
 interface CategoryGridProps {
   categories: Category[];
@@ -46,15 +45,14 @@ export function CategoryGrid({
               isSelected && 'bg-primary/10 ring-2 ring-primary/50'
             )}
           >
-            <CategoryIcon
-              icon={category.icon}
-              color={category.color}
-              size="lg"
+            <div
               className={cn(
-                'transition-transform group-hover:scale-110',
-                isSelected && 'scale-110'
+                'flex size-12 items-center justify-center rounded-xl bg-muted/60 text-xl transition-transform group-hover:scale-110',
+                isSelected && 'scale-110 bg-primary/10'
               )}
-            />
+            >
+              <span className="text-sm font-medium">{category.name.charAt(0)}</span>
+            </div>
             <span
               className={cn(
                 'text-[10px] font-medium text-muted-foreground text-center leading-tight line-clamp-2',

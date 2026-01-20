@@ -270,7 +270,7 @@ export function AddTransactionSheet({
 
             <div
               ref={categoryScrollRef}
-              className="flex gap-2 overflow-x-auto px-4 pb-2 scrollbar-hide scroll-smooth"
+              className="flex gap-2 overflow-x-auto px-4 py-1 scrollbar-hide scroll-smooth"
             >
               {currentCategories.map((category, index) => {
                 const isSelected = category.id === selectedCategory?.id;
@@ -280,7 +280,7 @@ export function AddTransactionSheet({
                     data-category-id={category.id}
                     onClick={() => handleCategorySelect(category)}
                     className={cn(
-                      "group flex shrink-0 flex-col items-center gap-1.5 rounded-2xl px-3 py-2.5 transition-all duration-200",
+                      "group flex shrink-0 flex-col items-center gap-1.5 rounded-xl px-3 py-1 transition-all duration-200",
                       "hover:bg-accent/50 active:scale-95",
                       isSelected && cn(
                         "ring-2 shadow-lg",
@@ -294,12 +294,12 @@ export function AddTransactionSheet({
                   >
                     <div
                       className={cn(
-                        "flex size-11 items-center justify-center rounded-xl text-xl transition-transform",
+                        "flex size-11 items-center justify-center rounded-xl text-lg font-medium transition-transform",
                         "bg-muted/60",
                         isSelected && "scale-110 bg-white dark:bg-card shadow-md"
                       )}
                     >
-                      {category.icon}
+                      {category.name.charAt(0)}
                     </div>
                     <span
                       className={cn(
@@ -338,8 +338,8 @@ export function AddTransactionSheet({
               {/* Selected Category Badge */}
               {selectedCategory && (
                 <div className="absolute left-4 top-4 flex items-center gap-2 animate-in fade-in slide-in-from-left-2">
-                  <div className="flex size-8 items-center justify-center rounded-lg bg-muted/80 text-base shadow-sm">
-                    {selectedCategory.icon}
+                  <div className="flex size-8 items-center justify-center rounded-lg bg-muted/80 text-sm font-medium shadow-sm">
+                    {selectedCategory.name.charAt(0)}
                   </div>
                   <span className="text-sm font-medium text-muted-foreground">
                     {selectedCategory.name}

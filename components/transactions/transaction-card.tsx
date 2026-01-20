@@ -3,7 +3,6 @@
 import { cn } from '@/lib/utils';
 import { TransactionWithCategory } from '@/types';
 import { formatCurrency } from '@/lib/utils/format';
-import { CategoryIcon } from '@/components/categories/category-icon';
 
 interface TransactionCardProps {
   transaction: TransactionWithCategory;
@@ -38,12 +37,17 @@ export function TransactionCard({
         className
       )}
     >
-      {/* Category Icon */}
-      <CategoryIcon
-        icon={transaction.category.icon}
-        color={transaction.category.color}
-        size="md"
-      />
+      {/* Category Initial */}
+      <div
+        className={cn(
+          'flex size-10 items-center justify-center rounded-xl bg-muted/60 text-lg font-medium',
+          isExpense && 'bg-expense/10 text-expense',
+          isIncome && 'bg-income/10 text-income',
+          isTransfer && 'bg-transfer/10 text-transfer'
+        )}
+      >
+        {transaction.category.name.charAt(0)}
+      </div>
 
       {/* Content */}
       <div className="flex flex-1 flex-col gap-0.5 overflow-hidden">

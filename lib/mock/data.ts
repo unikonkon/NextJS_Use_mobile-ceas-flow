@@ -8,27 +8,25 @@ import {
 
 // Mock Categories
 export const mockExpenseCategories: Category[] = [
-  { id: '1', name: 'อาหาร', type: 'expense', icon: '🍔', color: 'category-food', sortOrder: 1, isSystem: true, createdAt: new Date() },
-  { id: '2', name: 'ของใช้', type: 'expense', icon: '🛒', color: 'category-shopping', sortOrder: 2, isSystem: true, createdAt: new Date() },
-  { id: '3', name: 'การจราจร', type: 'expense', icon: '🚌', color: 'category-transport', sortOrder: 3, isSystem: true, createdAt: new Date() },
-  { id: '4', name: 'เดท', type: 'expense', icon: '🍽️', color: 'category-social', sortOrder: 4, isSystem: true, createdAt: new Date() },
-  { id: '5', name: 'ทางการแพทย์', type: 'expense', icon: '🏥', color: 'category-health', sortOrder: 5, isSystem: true, createdAt: new Date() },
-  { id: '6', name: 'ครอบครัว', type: 'expense', icon: '👨‍👩‍👧', color: 'category-family', sortOrder: 6, isSystem: true, createdAt: new Date() },
-  { id: '7', name: 'นันทนาการ', type: 'expense', icon: '🎬', color: 'category-entertainment', sortOrder: 7, isSystem: true, createdAt: new Date() },
-  { id: '8', name: 'ทางสังคม', type: 'expense', icon: '🥂', color: 'category-social', sortOrder: 8, isSystem: true, createdAt: new Date() },
-  { id: '9', name: 'ที่อยู่อาศัย', type: 'expense', icon: '🏠', color: 'category-housing', sortOrder: 9, isSystem: true, createdAt: new Date() },
-  { id: '10', name: 'สื่อสาร', type: 'expense', icon: '📱', color: 'category-communication', sortOrder: 10, isSystem: true, createdAt: new Date() },
-  { id: '11', name: 'เสื้อผ้า', type: 'expense', icon: '👕', color: 'category-clothing', sortOrder: 11, isSystem: true, createdAt: new Date() },
-  { id: '12', name: 'อื่นๆ', type: 'expense', icon: '📦', color: 'category-other', sortOrder: 12, isSystem: true, createdAt: new Date() },
+  { id: '1', name: 'อาหาร', type: 'expense' },
+  { id: '2', name: 'ของใช้', type: 'expense' },
+  { id: '3', name: 'การจราจร', type: 'expense' },
+  { id: '4', name: 'เดท', type: 'expense' },
+  { id: '5', name: 'ทางการแพทย์', type: 'expense' },
+  { id: '6', name: 'ครอบครัว', type: 'expense' },
+  { id: '7', name: 'นันทนาการ', type: 'expense' },
+  { id: '8', name: 'ทางสังคม', type: 'expense' },
+  { id: '9', name: 'ที่อยู่อาศัย', type: 'expense' },
+  { id: '10', name: 'สื่อสาร', type: 'expense' },
+  { id: '12', name: 'อื่นๆ', type: 'expense' },
 ];
 
 export const mockIncomeCategories: Category[] = [
-  { id: '101', name: 'เงินเดือน', type: 'income', icon: '💵', color: 'category-family', sortOrder: 1, isSystem: true, createdAt: new Date() },
-  { id: '102', name: 'โบนัส', type: 'income', icon: '🎁', color: 'category-entertainment', sortOrder: 2, isSystem: true, createdAt: new Date() },
-  { id: '103', name: 'ค่าคอมมิชชั่น', type: 'income', icon: '💰', color: 'category-shopping', sortOrder: 3, isSystem: true, createdAt: new Date() },
-  { id: '104', name: 'ดอกเบี้ย', type: 'income', icon: '🏦', color: 'category-bills', sortOrder: 4, isSystem: true, createdAt: new Date() },
-  { id: '105', name: 'รายได้เสริม', type: 'income', icon: '✨', color: 'category-health', sortOrder: 5, isSystem: true, createdAt: new Date() },
-  { id: '106', name: 'อื่นๆ', type: 'income', icon: '📥', color: 'category-other', sortOrder: 6, isSystem: true, createdAt: new Date() },
+  { id: '101', name: 'เงินเดือน', type: 'income' },
+  { id: '102', name: 'โบนัส', type: 'income' },
+  { id: '103', name: 'ค่าคอมมิชชั่น', type: 'income'},
+  { id: '104', name: 'ดอกเบี้ย', type: 'income' },
+  { id: '105', name: 'รายได้เสริม', type: 'income' },
 ];
 
 // Mock Wallets

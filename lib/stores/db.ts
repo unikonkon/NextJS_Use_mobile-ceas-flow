@@ -24,15 +24,8 @@ export interface StoredTransaction {
 
 export interface StoredCategory {
   id: string;
-  bookId?: string;
   name: string;
   type: 'expense' | 'income';
-  icon: string;
-  color: string;
-  parentId?: string;
-  sortOrder: number;
-  isSystem: boolean;
-  createdAt: string; // ISO string
 }
 
 export interface StoredWallet {
@@ -62,7 +55,7 @@ export class AppDatabase extends Dexie {
 
     this.version(1).stores({
       transactions: 'id, bookId, walletId, categoryId, type, date, createdAt',
-      categories: 'id, bookId, type, sortOrder',
+      categories: 'id, type',
       wallets: 'id, bookId, type',
     });
   }
@@ -95,15 +88,17 @@ export function fromStoredTransaction(s: StoredTransaction): Transaction {
 
 export function toStoredCategory(c: Category): StoredCategory {
   return {
-    ...c,
-    createdAt: c.createdAt.toISOString(),
+    id: c.id,
+    name: c.name,
+    type: c.type,
   };
 }
 
 export function fromStoredCategory(s: StoredCategory): Category {
   return {
-    ...s,
-    createdAt: new Date(s.createdAt),
+    id: s.id,
+    name: s.name,
+    type: s.type,
   };
 }
 

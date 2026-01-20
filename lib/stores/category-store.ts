@@ -68,8 +68,8 @@ export const useCategoryStore = create<CategoryStore>((set, get) => ({
         const income = categories.filter((c) => c.type === 'income');
 
         set({
-          expenseCategories: expense.sort((a, b) => a.sortOrder - b.sortOrder),
-          incomeCategories: income.sort((a, b) => a.sortOrder - b.sortOrder),
+          expenseCategories: expense,
+          incomeCategories: income,
           isLoading: false,
           isInitialized: true,
         });
