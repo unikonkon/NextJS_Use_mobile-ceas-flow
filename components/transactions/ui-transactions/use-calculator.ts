@@ -57,7 +57,7 @@ export function useCalculator(options: UseCalculatorOptions = {}): UseCalculator
       newValue = num;
       setShouldResetDisplay(false);
     } else {
-      if (displayValue.replace('.', '').length >= 12) return;
+      if (displayValue.replace('.', '').length >= 9) return;
       newValue = displayValue + num;
     }
 

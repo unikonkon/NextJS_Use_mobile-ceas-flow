@@ -57,7 +57,6 @@ export function EditTransactionSheet({
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [note, setNote] = useState('');
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [addCategoryOpen, setAddCategoryOpen] = useState(false);
 
@@ -79,7 +78,6 @@ export function EditTransactionSheet({
       calculator.reset();
       calculator.setDisplayValue(transaction.amount.toString());
       setShowDeleteConfirm(false);
-      setShowDatePicker(false);
     }
   }, [transaction, open]);
 
@@ -134,7 +132,7 @@ export function EditTransactionSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="bottom"
-        className="h-[75vh] rounded-t-[2rem] px-0 pb-0 overflow-hidden border-t-0"
+        className="h-[70vh] rounded-t-[2rem] px-0 pb-0 overflow-hidden border-t-0"
       >
         <SheetTitle className="sr-only">แก้ไขรายการ</SheetTitle>
 
@@ -233,93 +231,91 @@ export function EditTransactionSheet({
             label="หมวดหมู่"
           />
 
-          {/* Amount Display */}
-          <div className="px-4 ">
+          {/* Amount Display - Split Layout Card */}
+          <div className="px-3 py-1">
             <div
               className={cn(
-                "relative overflow-hidden rounded-2xl px-3 pb-safe pt-3 transition-all",
-                "bg-linear-to-br from-card to-muted/20",
+                "relative overflow-hidden rounded-2xl transition-all duration-300",
+                "bg-linear-to-br from-card via-card to-muted/20",
                 "border border-border/50 shadow-sm"
               )}
             >
-              {/* Selected Info */}
-              {selectedCategory && (
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <div className="flex size-7 items-center justify-center rounded-lg bg-muted/60 text-xs font-semibold">
-                      {selectedCategory.name.charAt(0)}
-                    </div>
-                    <span className="text-sm font-medium text-muted-foreground">
-                      {selectedCategory.name}
+              {/* Split Layout Container */}
+              <div className="flex w-full">
+                {/* Left Half - Category Badge & Quick Actions */}
+                <div className="w-3/5 flex flex-col justify-between p-3 border-r border-border/30">
+
+                  {/* Date Selector with Navigation */}
+                  <div className="flex items-center gap-0.5 mt-2 px-1 py-0.5 rounded-lg bg-muted/40">
+                    <button
+                      onClick={() => changeDate(-1)}
+                      className="flex items-center justify-center size-6 rounded-md hover:bg-muted transition-colors active:scale-95"
+                    >
+                      <ChevronLeft className="size-3.5 text-muted-foreground" />
+                    </button>
+                    <button
+                      className="flex-1 flex items-center justify-center gap-1 px-1 py-1 text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <Calendar className="size-3" />
+                      <span>{formatRelativeDate(selectedDate)}</span>
+                    </button>
+                    <button
+                      onClick={() => changeDate(1)}
+                      className="flex items-center justify-center size-6 rounded-md hover:bg-muted transition-colors active:scale-95"
+                    >
+                      <ChevronRight className="size-3.5 text-muted-foreground" />
+                    </button>
+                  </div>
+
+                  {/* Note Input - Compact */}
+                  <div className="flex items-center gap-1.5 mt-2 px-2 py-1.5 rounded-lg bg-muted/30 transition-all focus-within:bg-muted/50 focus-within:ring-1 focus-within:ring-primary/30">
+                    <FileText className="size-3 text-muted-foreground/60 shrink-0" />
+                    <Input
+                      value={note}
+                      onChange={(e) => setNote(e.target.value)}
+                      placeholder="บันทึก..."
+                      className="h-5 border-0 bg-transparent p-0 text-[11px] focus-visible:ring-0 placeholder:text-muted-foreground/40"
+                    />
+                  </div>
+                </div>
+
+                {/* Right Half - Amount Display */}
+                <div className="w-2/5 flex flex-col justify-between p-3">
+                  {/* Operation Indicator */}
+                  <div className="flex justify-end">
+                    {calculator.previousValue && calculator.operation ? (
+                      <span className="text-xs text-muted-foreground font-medium animate-in fade-in slide-in-from-right-2">
+                        {formatNumber(parseFloat(calculator.previousValue))} {calculator.operation}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-transparent select-none">-</span>
+                    )}
+                  </div>
+
+                  {/* Main Amount Display */}
+                  <div className="flex items-baseline justify-end gap-0.5 mt-auto">
+                    {/* <span
+                      className={cn(
+                        "text-lg font-semibold transition-colors",
+                        transactionType === 'expense' && "text-expense/60",
+                        transactionType === 'income' && "text-income/60"
+                      )}
+                    >
+                      {currency}
+                    </span> */}
+                    <span
+                      className={cn(
+                        "font-numbers text-2xl font-bold tracking-tight transition-all",
+                        parseFloat(calculator.displayValue) > 0
+                          ? "text-foreground"
+                          : "text-muted-foreground/40"
+                      )}
+                    >
+                      {calculator.formatDisplay(calculator.displayValue)}
                     </span>
                   </div>
-                  {calculator.previousValue && calculator.operation && (
-                    <span className="text-xs text-muted-foreground">
-                      {formatNumber(parseFloat(calculator.previousValue))} {calculator.operation}
-                    </span>
-                  )}
                 </div>
-              )}
-
-              {/* Amount */}
-              <div className="flex items-baseline justify-end gap-1">
-                <span className={cn(
-                  "text-xl font-medium",
-                  transactionType === 'expense' && "text-expense/70",
-                  transactionType === 'income' && "text-income/70"
-                )}>
-                  {currency}
-                </span>
-                <span
-                  className={cn(
-                    "font-mono text-4xl font-bold tracking-tight",
-                    parseFloat(calculator.displayValue) > 0 ? "text-foreground" : "text-muted-foreground"
-                  )}
-                >
-                  {calculator.formatDisplay(calculator.displayValue)}
-                </span>
               </div>
-            </div>
-          </div>
-
-          {/* Date & Note */}
-          <div className="flex gap-2 px-4 pb-2">
-            {/* Date Selector */}
-            <div className="flex items-center gap-1 rounded-xl bg-muted/50 px-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-7"
-                onClick={() => changeDate(-1)}
-              >
-                <ChevronLeft className="size-4" />
-              </Button>
-              <button
-                onClick={() => setShowDatePicker(!showDatePicker)}
-                className="flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium"
-              >
-                <Calendar className="size-3.5 text-muted-foreground" />
-                {formatRelativeDate(selectedDate)}
-              </button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-7"
-                onClick={() => changeDate(1)}
-              >
-                <ChevronRight className="size-4" />
-              </Button>
-            </div>
-
-            {/* Note Input */}
-            <div className="flex flex-1 items-center gap-2 rounded-xl bg-muted/50 px-3">
-              <FileText className="size-3.5 text-muted-foreground shrink-0" />
-              <Input
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder="บันทึก..."
-                className="h-8 border-0 bg-transparent p-0 text-xs focus-visible:ring-0"
-              />
             </div>
           </div>
 
