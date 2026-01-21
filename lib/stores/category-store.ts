@@ -26,6 +26,7 @@ interface CategoryStore {
   addCategory: (input: CategoryInput) => Promise<Category>;
   getCategoryById: (id: string) => Category | undefined;
   getAllCategories: () => Category[];
+  reorderCategories: (type: 'expense' | 'income', categories: Category[]) => Promise<void>;
 }
 
 // ============================================
@@ -131,5 +132,26 @@ export const useCategoryStore = create<CategoryStore>((set, get) => ({
   getAllCategories: () => {
     const { expenseCategories, incomeCategories } = get();
     return [...expenseCategories, ...incomeCategories];
+  },
+
+  reorderCategories: async (type, categories) => {
+    // Update Zustand state immediately
+    if (type === 'expense') {
+      set({ expenseCategories: categories });
+    } else {
+      set({ incomeCategories: categories });
+    }
+
+    // Persist new order to IndexedDB
+    try {
+      const { expenseCategories, incomeCategories } = get();
+      const allCategories = [...expenseCategories, ...incomeCategories];
+
+      // Clear and re-add to preserve order
+      await db.categories.clear();
+      await db.categories.bulkPut(allCategories.map(toStoredCategory));
+    } catch (error) {
+      console.error('Failed to persist category order:', error);
+    }
   },
 }));

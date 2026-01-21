@@ -44,8 +44,9 @@ export function AddTransactionSheet({
   const [note, setNote] = useState('');
   const [addCategoryOpen, setAddCategoryOpen] = useState(false);
 
-  // Category store for adding new categories
+  // Category store for adding new categories and reordering
   const addCategory = useCategoryStore((s) => s.addCategory);
+  const reorderCategories = useCategoryStore((s) => s.reorderCategories);
 
   // Calculator hook
   const calculator = useCalculator();
@@ -126,6 +127,8 @@ export function AddTransactionSheet({
             transactionType={transactionType}
             onSelect={setSelectedCategory}
             onAddNew={() => setAddCategoryOpen(true)}
+            onReorderCategories={(cats) => reorderCategories(transactionType, cats)}
+            onAddCategory={handleAddCategory}
           />
 
           {/* Amount Display - Split Layout Card */}
