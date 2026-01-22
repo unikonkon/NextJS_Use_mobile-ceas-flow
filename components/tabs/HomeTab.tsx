@@ -17,6 +17,8 @@ export function HomeTab() {
   // Store selectors
   const selectedMonth = useTransactionStore((s) => s.selectedMonth);
   const setSelectedMonth = useTransactionStore((s) => s.setSelectedMonth);
+  const selectedDay = useTransactionStore((s) => s.selectedDay);
+  const setSelectedDay = useTransactionStore((s) => s.setSelectedDay);
   const newTransactionIds = useTransactionStore((s) => s.newTransactionIds);
   const dailySummaries = useTransactionStore((s) => s.dailySummaries);
   const monthlySummary = useTransactionStore((s) => s.monthlySummary);
@@ -68,7 +70,12 @@ export function HomeTab() {
       <PageContainer className="pt-4">
         {/* Month Picker */}
         <div className="mb-4">
-          <MonthPicker value={selectedMonth} onChange={setSelectedMonth} />
+          <MonthPicker
+            value={selectedMonth}
+            onChange={setSelectedMonth}
+            selectedDay={selectedDay}
+            onDayChange={setSelectedDay}
+          />
         </div>
 
         {/* Summary */}

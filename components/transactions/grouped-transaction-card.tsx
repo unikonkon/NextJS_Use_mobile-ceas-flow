@@ -111,7 +111,7 @@ export function GroupedTransactionCard({
               )}
             >
               <Layers className="size-2.5" />
-              <span>{count} รายการ</span>
+              <span>{count}</span>
             </div>
           </div>
 

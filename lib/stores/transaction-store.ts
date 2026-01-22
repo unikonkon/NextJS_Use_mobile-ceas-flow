@@ -12,6 +12,14 @@ import { mockTransactions } from '@/lib/mock/data';
 // ============================================
 // Helper Functions
 // ============================================
+function isSameDay(date1: Date, date2: Date): boolean {
+  return (
+    date1.getDate() === date2.getDate() &&
+    date1.getMonth() === date2.getMonth() &&
+    date1.getFullYear() === date2.getFullYear()
+  );
+}
+
 function filterTransactionsByMonth(
   transactions: TransactionWithCategory[],
   selectedMonth: Date
@@ -23,14 +31,26 @@ function filterTransactionsByMonth(
   });
 }
 
+function filterTransactionsByDay(
+  transactions: TransactionWithCategory[],
+  selectedDay: Date
+): TransactionWithCategory[] {
+  return transactions.filter((t) => isSameDay(t.date, selectedDay));
+}
+
 function computeDailySummaries(
   transactions: TransactionWithCategory[],
-  selectedMonth?: Date
+  selectedMonth?: Date,
+  selectedDay?: Date | null
 ): DailySummary[] {
-  // Filter by month if provided
-  const filteredTransactions = selectedMonth
-    ? filterTransactionsByMonth(transactions, selectedMonth)
-    : transactions;
+  // Filter by day if provided, otherwise by month
+  let filteredTransactions = transactions;
+
+  if (selectedDay) {
+    filteredTransactions = filterTransactionsByDay(transactions, selectedDay);
+  } else if (selectedMonth) {
+    filteredTransactions = filterTransactionsByMonth(transactions, selectedMonth);
+  }
 
   const grouped = filteredTransactions.reduce((acc, transaction) => {
     const dateKey = transaction.date.toDateString();
@@ -94,6 +114,7 @@ interface TransactionStore {
 
   // UI State
   selectedMonth: Date;
+  selectedDay: Date | null;
   toastVisible: boolean;
   toastType: TransactionType;
 
@@ -104,6 +125,7 @@ interface TransactionStore {
   deleteTransaction: (id: string) => Promise<void>;
   getTransactionById: (id: string) => TransactionWithCategory | undefined;
   setSelectedMonth: (date: Date) => void;
+  setSelectedDay: (date: Date | null) => void;
   hideToast: () => void;
 }
 
@@ -119,6 +141,7 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
   dailySummaries: [],
   monthlySummary: { income: 0, expense: 0, balance: 0 },
   selectedMonth: new Date(),
+  selectedDay: null,
   toastVisible: false,
   toastType: 'expense',
 
@@ -172,10 +195,10 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
           };
         });
 
-        const selectedMonth = get().selectedMonth;
+        const { selectedMonth, selectedDay } = get();
         set({
           transactions: transactionsWithCategory,
-          dailySummaries: computeDailySummaries(transactionsWithCategory, selectedMonth),
+          dailySummaries: computeDailySummaries(transactionsWithCategory, selectedMonth, selectedDay),
           monthlySummary: computeMonthlySummary(transactionsWithCategory, selectedMonth),
           isLoading: false,
           isInitialized: true,
@@ -191,10 +214,10 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
           } as TransactionWithCategory;
         }).filter((t) => t.category); // Filter out transactions with missing categories
 
-        const selectedMonth = get().selectedMonth;
+        const { selectedMonth, selectedDay } = get();
         set({
           transactions,
-          dailySummaries: computeDailySummaries(transactions, selectedMonth),
+          dailySummaries: computeDailySummaries(transactions, selectedMonth, selectedDay),
           monthlySummary: computeMonthlySummary(transactions, selectedMonth),
           isLoading: false,
           isInitialized: true,
@@ -229,12 +252,12 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
 
     // Update Zustand state immediately for fast UI
     const newTransactions = [newTransaction, ...get().transactions];
-    const selectedMonth = get().selectedMonth;
+    const { selectedMonth, selectedDay } = get();
 
     set({
       transactions: newTransactions,
       newTransactionIds: [...get().newTransactionIds, newTransaction.id],
-      dailySummaries: computeDailySummaries(newTransactions, selectedMonth),
+      dailySummaries: computeDailySummaries(newTransactions, selectedMonth, selectedDay),
       monthlySummary: computeMonthlySummary(newTransactions, selectedMonth),
       toastVisible: true,
       toastType: input.type,
@@ -303,11 +326,11 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
     const transactions = get().transactions.map((t) =>
       t.id === id ? updatedTransaction : t
     );
-    const selectedMonth = get().selectedMonth;
+    const { selectedMonth, selectedDay } = get();
 
     set({
       transactions,
-      dailySummaries: computeDailySummaries(transactions, selectedMonth),
+      dailySummaries: computeDailySummaries(transactions, selectedMonth, selectedDay),
       monthlySummary: computeMonthlySummary(transactions, selectedMonth),
       toastVisible: true,
       toastType: updatedTransaction.type,
@@ -342,12 +365,12 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
 
   deleteTransaction: async (id: string) => {
     const transactions = get().transactions.filter((t) => t.id !== id);
-    const selectedMonth = get().selectedMonth;
+    const { selectedMonth, selectedDay } = get();
 
     // Update Zustand state immediately
     set({
       transactions,
-      dailySummaries: computeDailySummaries(transactions, selectedMonth),
+      dailySummaries: computeDailySummaries(transactions, selectedMonth, selectedDay),
       monthlySummary: computeMonthlySummary(transactions, selectedMonth),
     });
 
@@ -365,10 +388,21 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
 
   setSelectedMonth: (date) => {
     const transactions = get().transactions;
+    // Clear day selection when month changes
     set({
       selectedMonth: date,
-      dailySummaries: computeDailySummaries(transactions, date),
+      selectedDay: null,
+      dailySummaries: computeDailySummaries(transactions, date, null),
       monthlySummary: computeMonthlySummary(transactions, date),
+    });
+  },
+
+  setSelectedDay: (date) => {
+    const transactions = get().transactions;
+    const selectedMonth = get().selectedMonth;
+    set({
+      selectedDay: date,
+      dailySummaries: computeDailySummaries(transactions, selectedMonth, date),
     });
   },
 

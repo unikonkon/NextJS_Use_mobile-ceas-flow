@@ -92,17 +92,17 @@ export function DayGroup({
           {/* Day Summary */}
           <div className="flex items-center gap-3 text-xs font-medium font-numbers">
             {hasIncome && hasExpense && (
-              <span className="text-income/70">
+              <span className="text-income/80">
                 +{formatCurrency(summary.income)}
               </span>
             )}
             {hasIncome && hasExpense && (
-              <span className="text-expense/70">
+              <span className="text-expense/80">
                 -{formatCurrency(summary.expense)}
               </span>
             )}
             <span className={cn(
-              total >= 0 ? "text-income/70" : "text-expense/70"
+              total >= 0 ? "text-income/80" : "text-expense/80"
             )}>
            = {total >= 0 ? "+" : "-"}{formatCurrency(Math.abs(total))}
             </span>
