@@ -59,7 +59,7 @@ function SheetContent({
   const [velocity, setVelocity] = React.useState(0);
   const contentRef = React.useRef<HTMLDivElement>(null);
   const velocityTimerRef = React.useRef<NodeJS.Timeout | null>(null);
-  const closeThreshold = 100; // pixels to drag before closing
+  const closeThreshold = 120; // pixels to drag before closing (increased for mobile)
   const velocityThreshold = 0.5; // velocity threshold for closing
 
   const handleDragStart = (clientY: number) => {
@@ -75,18 +75,18 @@ function SheetContent({
     if (side !== "bottom" || !isDragging) return;
     const deltaY = clientY - startY;
     const deltaVelocity = clientY - lastY;
-    
+
     // Only allow dragging down (positive deltaY)
     if (deltaY > 0) {
       setDragY(deltaY);
       setVelocity(deltaVelocity);
       setLastY(clientY);
-      
+
       // Clear previous timer
       if (velocityTimerRef.current) {
         clearTimeout(velocityTimerRef.current);
       }
-      
+
       // Reset velocity after a short delay
       velocityTimerRef.current = setTimeout(() => {
         setVelocity(0);
@@ -96,19 +96,20 @@ function SheetContent({
 
   const handleDragEnd = () => {
     if (side !== "bottom" || !isDragging) return;
-    
+
     // Clear velocity timer
     if (velocityTimerRef.current) {
       clearTimeout(velocityTimerRef.current);
     }
-    
+
     // Close if dragged past threshold or has high downward velocity
-    if (dragY > closeThreshold || (dragY > 50 && velocity > velocityThreshold)) {
+    // Increased minimum drag distance for velocity-based closing (from 50 to 100)
+    if (dragY > closeThreshold || (dragY > 75 && velocity > velocityThreshold)) {
       // Close the sheet
       const closeButton = contentRef.current?.querySelector('[data-slot="sheet-close"]') as HTMLElement;
       closeButton?.click();
     }
-    
+
     setIsDragging(false);
     setDragY(0);
     setStartY(0);
@@ -120,10 +121,10 @@ function SheetContent({
   const handleTouchStart = (e: React.TouchEvent) => {
     // Only start drag from top area or handle
     const target = e.target as HTMLElement;
-    const isTopArea = target.closest('[data-drag-handle]') || 
-                      target.closest('[data-slot="sheet-header"]') ||
-                      (contentRef.current && e.touches[0].clientY - contentRef.current.getBoundingClientRect().top < 150);
-    
+    const isTopArea = target.closest('[data-drag-handle]') ||
+      target.closest('[data-slot="sheet-header"]') ||
+      (contentRef.current && e.touches[0].clientY - contentRef.current.getBoundingClientRect().top < 150);
+
     if (isTopArea) {
       handleDragStart(e.touches[0].clientY);
     }
@@ -144,10 +145,10 @@ function SheetContent({
   const handlePointerDown = (e: React.PointerEvent) => {
     // Only start drag from the top area (handle bar region)
     const target = e.target as HTMLElement;
-    const isTopArea = target.closest('[data-drag-handle]') || 
-                      target.closest('[data-slot="sheet-header"]') ||
-                      (contentRef.current && e.clientY - contentRef.current.getBoundingClientRect().top < 100);
-    
+    const isTopArea = target.closest('[data-drag-handle]') ||
+      target.closest('[data-slot="sheet-header"]') ||
+      (contentRef.current && e.clientY - contentRef.current.getBoundingClientRect().top < 100);
+
     if (isTopArea) {
       handleDragStart(e.clientY);
       (e.target as HTMLElement).setPointerCapture(e.pointerId);
@@ -190,22 +191,22 @@ function SheetContent({
     };
   }, []);
 
-  // Calculate opacity based on drag distance
-  const maxDrag = 200; // Maximum drag distance for full opacity change
+  // คำนวณค่าความโปร่งใส (opacity) ตามระยะทางที่ลาก
+  const maxDrag = 200; // ระยะทางสูงสุดที่ลากเพื่อให้เปลี่ยน opacity เต็มที่
   const overlayOpacity = side === "bottom" && isDragging && dragY > 0
     ? Math.max(0, 0.5 - (dragY / maxDrag) * 0.5)
     : undefined;
 
-  const transformStyle = side === "bottom" && dragY > 0 
-    ? { 
-        transform: `translateY(${dragY}px)`,
-        transition: isDragging ? 'none' : 'transform 0.2s ease-out'
-      }
+  const transformStyle = side === "bottom" && dragY > 0
+    ? {
+      transform: `translateY(${dragY}px)`,
+      transition: isDragging ? 'none' : 'transform 0.2s ease-out'
+    }
     : {};
 
   return (
     <SheetPortal>
-      <SheetOverlay 
+      <SheetOverlay
         style={overlayOpacity !== undefined ? { opacity: overlayOpacity } : undefined}
         className={cn(
           side === "bottom" && isDragging && "transition-opacity duration-75"
@@ -237,7 +238,7 @@ function SheetContent({
         {...props}
       >
         {children}
-        <SheetPrimitive.Close 
+        <SheetPrimitive.Close
           data-slot="sheet-close"
           className="ring-offset-background focus:ring-ring data-[state=open]:bg-secondary absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none">
           <XIcon className="size-6" />

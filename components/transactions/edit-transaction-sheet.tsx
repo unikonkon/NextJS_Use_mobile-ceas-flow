@@ -55,6 +55,7 @@ export function EditTransactionSheet({
   const [note, setNote] = useState('');
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isNoteInputFocused, setIsNoteInputFocused] = useState(false);
 
   // Category store for adding new categories, reordering, and deleting
   const addCategory = useCategoryStore((s) => s.addCategory);
@@ -76,8 +77,16 @@ export function EditTransactionSheet({
       calculator.reset();
       calculator.setDisplayValue(transaction.amount.toString());
       setShowDeleteConfirm(false);
+      setIsNoteInputFocused(false);
     }
   }, [transaction, open]);
+
+  // Reset note input focus when sheet closes
+  useEffect(() => {
+    if (!open) {
+      setIsNoteInputFocused(false);
+    }
+  }, [open]);
 
   const currentCategories = transactionType === 'income' ? incomeCategories : expenseCategories;
 
@@ -123,7 +132,7 @@ export function EditTransactionSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="bottom"
-        className="min-h-[72vh] rounded-t-[2rem] px-0 pb-0 overflow-hidden border-t-0"
+        className="min-h-[62vh] rounded-t-[2rem] px-0 pb-0 overflow-hidden border-t-0"
       >
         <SheetTitle className="sr-only">แก้ไขรายการ</SheetTitle>
 
@@ -251,6 +260,8 @@ export function EditTransactionSheet({
                     <Input
                       value={note}
                       onChange={(e) => setNote(e.target.value)}
+                      onFocus={() => setIsNoteInputFocused(true)}
+                      onBlur={() => setIsNoteInputFocused(false)}
                       placeholder="บันทึก..."
                       className="h-5 border-0 bg-transparent p-0 text-[11px] focus-visible:ring-0 placeholder:text-muted-foreground/40"
                     />
@@ -297,18 +308,20 @@ export function EditTransactionSheet({
           </div>
 
           {/* Calculator */}
-          <CalculatorKeypad
-            operation={calculator.operation}
-            transactionType={transactionType}
-            canSubmit={canSave}
-            onNumber={calculator.handleNumber}
-            onOperation={calculator.handleOperation}
-            onEquals={calculator.handleEquals}
-            onClear={calculator.handleClear}
-            onBackspace={calculator.handleBackspace}
-            onSubmit={handleSave}
-            showSparkle={false}
-          />
+          {!isNoteInputFocused && (
+            <CalculatorKeypad
+              operation={calculator.operation}
+              transactionType={transactionType}
+              canSubmit={canSave}
+              onNumber={calculator.handleNumber}
+              onOperation={calculator.handleOperation}
+              onEquals={calculator.handleEquals}
+              onClear={calculator.handleClear}
+              onBackspace={calculator.handleBackspace}
+              onSubmit={handleSave}
+              showSparkle={false}
+            />
+          )}
         </div>
       </SheetContent>
     </Sheet>

@@ -44,6 +44,7 @@ export function AddTransactionSheet({
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [note, setNote] = useState('');
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [isNoteInputFocused, setIsNoteInputFocused] = useState(false);
 
   // Category store for adding new categories, reordering, and deleting
   const addCategory = useCategoryStore((s) => s.addCategory);
@@ -64,6 +65,13 @@ export function AddTransactionSheet({
     }
   }, [open, currentCategories, selectedCategory]);
 
+  // Reset note input focus when sheet closes
+  useEffect(() => {
+    if (!open) {
+      setIsNoteInputFocused(false);
+    }
+  }, [open]);
+
   const handleTypeChange = (type: TransactionType) => {
     setTransactionType(type);
     // Auto-select first category of new type
@@ -74,6 +82,16 @@ export function AddTransactionSheet({
   const handleAddCategory = async (name: string, type: CategoryType, icon?: string) => {
     const newCategory = await addCategory({ name, type, icon });
     setSelectedCategory(newCategory);
+  };
+
+  // Reset form to initial values
+  const resetForm = () => {
+    calculator.reset();
+    setTransactionType('expense');
+    setSelectedCategory(null);
+    setNote('');
+    setSelectedDate(new Date());
+    setIsNoteInputFocused(false);
   };
 
   const handleSubmit = () => {
@@ -87,22 +105,28 @@ export function AddTransactionSheet({
       });
 
       // Reset form
-      calculator.reset();
-      setSelectedCategory(null);
-      setNote('');
-      setSelectedDate(new Date());
+      resetForm();
       setOpen(false);
+    }
+  };
+
+  // Handle sheet open/close
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    if (!newOpen) {
+      // Reset form when sheet closes (including when X button is clicked)
+      resetForm();
     }
   };
 
   const canSubmit = !!(selectedCategory && parseFloat(calculator.displayValue) > 0);
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
+    <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetTrigger asChild>{trigger}</SheetTrigger>
       <SheetContent
         side="bottom"
-        className="min-h-[72vh] rounded-t-[2rem] px-0 pb-0 overflow-hidden border-t-0"
+        className="min-h-[54vh] rounded-t-[2rem] px-0 pb-0 overflow-hidden border-t-0"
       >
         {/* Hidden title for accessibility */}
         <SheetTitle className="sr-only">เพิ่มรายการ</SheetTitle>
@@ -188,6 +212,8 @@ export function AddTransactionSheet({
                     <Input
                       value={note}
                       onChange={(e) => setNote(e.target.value)}
+                      onFocus={() => setIsNoteInputFocused(true)}
+                      onBlur={() => setIsNoteInputFocused(false)}
                       placeholder="บันทึก..."
                       className="h-5 border-0 bg-transparent p-0 text-[11px] focus-visible:ring-0 placeholder:text-muted-foreground/40"
                     />
@@ -234,18 +260,20 @@ export function AddTransactionSheet({
           </div>
 
           {/* Calculator Keypad */}
-          <CalculatorKeypad
-            operation={calculator.operation}
-            transactionType={transactionType}
-            canSubmit={canSubmit}
-            onNumber={calculator.handleNumber}
-            onOperation={calculator.handleOperation}
-            onEquals={calculator.handleEquals}
-            onClear={calculator.handleClear}
-            onBackspace={calculator.handleBackspace}
-            onSubmit={handleSubmit}
-            showSparkle={true}
-          />
+          {!isNoteInputFocused && (
+            <CalculatorKeypad
+              operation={calculator.operation}
+              transactionType={transactionType}
+              canSubmit={canSubmit}
+              onNumber={calculator.handleNumber}
+              onOperation={calculator.handleOperation}
+              onEquals={calculator.handleEquals}
+              onClear={calculator.handleClear}
+              onBackspace={calculator.handleBackspace}
+              onSubmit={handleSubmit}
+              showSparkle={true}
+            />
+          )}
         </div>
 
         {/* Add Category Modal */}
