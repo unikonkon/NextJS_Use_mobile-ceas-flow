@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
+import { DateTimePicker } from '@/components/ui/date-time-picker';
 import { Category, TransactionType, CategoryType } from '@/types';
 import { formatNumber } from '@/lib/utils/format';
 import { AddCategoryModal } from '@/components/categories';
@@ -15,7 +16,6 @@ import {
   CalculatorKeypad,
 } from './ui-transactions';
 import {
-  Calendar,
   Wallet,
   FileText,
 } from 'lucide-react';
@@ -28,6 +28,7 @@ interface AddTransactionSheetProps {
     type: TransactionType;
     amount: number;
     categoryId: string;
+    date?: Date;
     note?: string;
   }) => void;
 }
@@ -42,6 +43,7 @@ export function AddTransactionSheet({
   const [transactionType, setTransactionType] = useState<TransactionType>('expense');
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [note, setNote] = useState('');
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [addCategoryOpen, setAddCategoryOpen] = useState(false);
 
   // Category store for adding new categories, reordering, and deleting
@@ -72,6 +74,7 @@ export function AddTransactionSheet({
         type: transactionType,
         amount: parseFloat(calculator.displayValue),
         categoryId: selectedCategory.id,
+        date: selectedDate,
         note: note || undefined,
       });
 
@@ -79,6 +82,7 @@ export function AddTransactionSheet({
       calculator.reset();
       setSelectedCategory(null);
       setNote('');
+      setSelectedDate(new Date());
       setOpen(false);
     }
   };
@@ -150,16 +154,15 @@ export function AddTransactionSheet({
 
                   {/* Quick Actions Row */}
                   <div className="flex gap-1.5">
-                    <button
-                      className={cn(
+                    <DateTimePicker
+                      value={selectedDate}
+                      onChange={setSelectedDate}
+                      triggerClassName={cn(
                         "flex items-center gap-1 px-2 py-1.5 rounded-lg text-[10px] font-medium transition-all",
                         "bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground",
                         "active:scale-95"
                       )}
-                    >
-                      <Calendar className="size-3" />
-                      <span>วันนี้</span>
-                    </button>
+                    />
                     <button
                       className={cn(
                         "flex items-center gap-1 px-2 py-1.5 rounded-lg text-[10px] font-medium transition-all",

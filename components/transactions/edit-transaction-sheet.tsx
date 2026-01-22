@@ -9,8 +9,9 @@ import {
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { DateNavigator } from '@/components/ui/date-time-picker';
 import { Category, TransactionType, TransactionWithCategory, CategoryType } from '@/types';
-import { formatNumber, formatRelativeDate } from '@/lib/utils/format';
+import { formatNumber } from '@/lib/utils/format';
 import { AddCategoryModal } from '@/components/categories';
 import { useCategoryStore } from '@/lib/stores';
 import {
@@ -20,11 +21,8 @@ import {
   CalculatorKeypad,
 } from './ui-transactions';
 import {
-  Calendar,
   FileText,
   Trash2,
-  ChevronLeft,
-  ChevronRight,
   AlertTriangle,
 } from 'lucide-react';
 
@@ -120,13 +118,6 @@ export function EditTransactionSheet({
   };
 
   const canSave = !!(selectedCategory && parseFloat(calculator.displayValue) > 0);
-
-  // Date navigation
-  const changeDate = (days: number) => {
-    const newDate = new Date(selectedDate);
-    newDate.setDate(newDate.getDate() + days);
-    setSelectedDate(newDate);
-  };
 
   if (!transaction) return null;
 
@@ -251,26 +242,11 @@ export function EditTransactionSheet({
                 <div className="w-3/5 flex flex-col justify-between p-3 border-r border-border/30">
 
                   {/* Date Selector with Navigation */}
-                  <div className="flex items-center gap-0.5 mt-2 px-1 py-0.5 rounded-lg bg-muted/40">
-                    <button
-                      onClick={() => changeDate(-1)}
-                      className="flex items-center justify-center size-6 rounded-md hover:bg-muted transition-colors active:scale-95"
-                    >
-                      <ChevronLeft className="size-3.5 text-muted-foreground" />
-                    </button>
-                    <button
-                      className="flex-1 flex items-center justify-center gap-1 px-1 py-1 text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      <Calendar className="size-3" />
-                      <span>{formatRelativeDate(selectedDate)}</span>
-                    </button>
-                    <button
-                      onClick={() => changeDate(1)}
-                      className="flex items-center justify-center size-6 rounded-md hover:bg-muted transition-colors active:scale-95"
-                    >
-                      <ChevronRight className="size-3.5 text-muted-foreground" />
-                    </button>
-                  </div>
+                  <DateNavigator
+                    value={selectedDate}
+                    onChange={setSelectedDate}
+                    className="mt-2 px-1 py-0.5 rounded-lg bg-muted/40"
+                  />
 
                   {/* Note Input - Compact */}
                   <div className="flex items-center gap-1.5 mt-2 px-2 py-1.5 rounded-lg bg-muted/30 transition-all focus-within:bg-muted/50 focus-within:ring-1 focus-within:ring-primary/30">
