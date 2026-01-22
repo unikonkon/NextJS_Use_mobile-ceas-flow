@@ -1,33 +1,13 @@
 import {
-  Category,
   Wallet,
   TransactionWithCategory,
   DailySummary,
   CategorySummary,
 } from '@/types';
-
-// Mock Categories
-export const mockExpenseCategories: Category[] = [
-  { id: '1', name: 'อาหาร', type: 'expense' },
-  { id: '2', name: 'ของใช้', type: 'expense' },
-  { id: '3', name: 'การจราจร', type: 'expense' },
-  { id: '4', name: 'เดท', type: 'expense' },
-  { id: '5', name: 'ทางการแพทย์', type: 'expense' },
-  { id: '6', name: 'ครอบครัว', type: 'expense' },
-  { id: '7', name: 'นันทนาการ', type: 'expense' },
-  { id: '8', name: 'ทางสังคม', type: 'expense' },
-  { id: '9', name: 'ที่อยู่อาศัย', type: 'expense' },
-  { id: '10', name: 'สื่อสาร', type: 'expense' },
-  { id: '12', name: 'อื่นๆ', type: 'expense' },
-];
-
-export const mockIncomeCategories: Category[] = [
-  { id: '101', name: 'เงินเดือน', type: 'income' },
-  { id: '102', name: 'โบนัส', type: 'income' },
-  { id: '103', name: 'ค่าคอมมิชชั่น', type: 'income'},
-  { id: '104', name: 'ดอกเบี้ย', type: 'income' },
-  { id: '105', name: 'รายได้เสริม', type: 'income' },
-];
+import {
+  expenseCategories,
+  incomeCategories,
+} from '@/lib/constants/categories';
 
 // Mock Wallets
 export const mockWallets: Wallet[] = [
@@ -92,6 +72,10 @@ yesterday.setDate(yesterday.getDate() - 1);
 const twoDaysAgo = new Date(today);
 twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
 
+// Helper to find category by id
+const findExpense = (id: string) => expenseCategories.find((c) => c.id === id)!;
+const findIncome = (id: string) => incomeCategories.find((c) => c.id === id)!;
+
 // Mock Transactions
 export const mockTransactions: TransactionWithCategory[] = [
   // Today
@@ -105,7 +89,7 @@ export const mockTransactions: TransactionWithCategory[] = [
     currency: 'THB',
     date: today,
     note: 'มื้อเที่ยง',
-    category: mockExpenseCategories[0],
+    category: findExpense('1'), // อาหาร
     wallet: mockWallets[0],
     createdAt: today,
     updatedAt: today,
@@ -120,7 +104,7 @@ export const mockTransactions: TransactionWithCategory[] = [
     currency: 'THB',
     date: today,
     note: 'BTS',
-    category: mockExpenseCategories[2],
+    category: findExpense('3'), // เดินทาง
     wallet: mockWallets[1],
     createdAt: today,
     updatedAt: today,
@@ -129,13 +113,13 @@ export const mockTransactions: TransactionWithCategory[] = [
     id: 't3',
     bookId: 'b1',
     walletId: 'w3',
-    categoryId: '2',
+    categoryId: '11',
     type: 'expense',
     amount: 299,
     currency: 'THB',
     date: today,
     note: '7-Eleven',
-    category: mockExpenseCategories[1],
+    category: findExpense('11'), // ของใช้ส่วนตัว
     wallet: mockWallets[2],
     createdAt: today,
     updatedAt: today,
@@ -151,7 +135,7 @@ export const mockTransactions: TransactionWithCategory[] = [
     currency: 'THB',
     date: yesterday,
     note: 'อาหารเย็นกับเพื่อน',
-    category: mockExpenseCategories[0],
+    category: findExpense('1'), // อาหาร
     wallet: mockWallets[0],
     createdAt: yesterday,
     updatedAt: yesterday,
@@ -166,7 +150,7 @@ export const mockTransactions: TransactionWithCategory[] = [
     currency: 'THB',
     date: yesterday,
     note: 'เงินเดือนเดือน ม.ค.',
-    category: mockIncomeCategories[0],
+    category: findIncome('101'), // เงินเดือน
     wallet: mockWallets[1],
     createdAt: yesterday,
     updatedAt: yesterday,
@@ -175,13 +159,13 @@ export const mockTransactions: TransactionWithCategory[] = [
     id: 't6',
     bookId: 'b1',
     walletId: 'w4',
-    categoryId: '7',
+    categoryId: '18',
     type: 'expense',
     amount: 590,
     currency: 'THB',
     date: yesterday,
     note: 'Netflix & Spotify',
-    category: mockExpenseCategories[6],
+    category: findExpense('18'), // Subscription
     wallet: mockWallets[3],
     createdAt: yesterday,
     updatedAt: yesterday,
@@ -191,13 +175,13 @@ export const mockTransactions: TransactionWithCategory[] = [
     id: 't7',
     bookId: 'b1',
     walletId: 'w1',
-    categoryId: '5',
+    categoryId: '14',
     type: 'expense',
     amount: 850,
     currency: 'THB',
     date: twoDaysAgo,
     note: 'ค่ายา',
-    category: mockExpenseCategories[4],
+    category: findExpense('14'), // สุขภาพ/ยา
     wallet: mockWallets[0],
     createdAt: twoDaysAgo,
     updatedAt: twoDaysAgo,
@@ -206,13 +190,13 @@ export const mockTransactions: TransactionWithCategory[] = [
     id: 't8',
     bookId: 'b1',
     walletId: 'w2',
-    categoryId: '9',
+    categoryId: '6',
     type: 'expense',
     amount: 8500,
     currency: 'THB',
     date: twoDaysAgo,
     note: 'ค่าเช่าห้อง',
-    category: mockExpenseCategories[8],
+    category: findExpense('6'), // ค่าเช่า/ผ่อนบ้าน
     wallet: mockWallets[1],
     createdAt: twoDaysAgo,
     updatedAt: twoDaysAgo,
@@ -243,16 +227,16 @@ export const mockDailySummaries: DailySummary[] = [
 
 // Mock Category Summaries for Analytics
 export const mockExpenseSummaries: CategorySummary[] = [
-  { category: mockExpenseCategories[8], amount: 8500, percentage: 45.2, transactionCount: 1 },
-  { category: mockExpenseCategories[0], amount: 370, percentage: 19.7, transactionCount: 2 },
-  { category: mockExpenseCategories[4], amount: 850, percentage: 15.3, transactionCount: 1 },
-  { category: mockExpenseCategories[6], amount: 590, percentage: 10.6, transactionCount: 1 },
-  { category: mockExpenseCategories[1], amount: 299, percentage: 5.4, transactionCount: 1 },
-  { category: mockExpenseCategories[2], amount: 45, percentage: 3.8, transactionCount: 1 },
+  { category: findExpense('6'), amount: 8500, percentage: 45.2, transactionCount: 1 }, // ค่าเช่า/ผ่อนบ้าน
+  { category: findExpense('1'), amount: 370, percentage: 19.7, transactionCount: 2 }, // อาหาร
+  { category: findExpense('14'), amount: 850, percentage: 15.3, transactionCount: 1 }, // สุขภาพ/ยา
+  { category: findExpense('18'), amount: 590, percentage: 10.6, transactionCount: 1 }, // Subscription
+  { category: findExpense('11'), amount: 299, percentage: 5.4, transactionCount: 1 }, // ของใช้ส่วนตัว
+  { category: findExpense('3'), amount: 45, percentage: 3.8, transactionCount: 1 }, // เดินทาง
 ];
 
 export const mockIncomeSummaries: CategorySummary[] = [
-  { category: mockIncomeCategories[0], amount: 45000, percentage: 100, transactionCount: 1 },
+  { category: findIncome('101'), amount: 45000, percentage: 100, transactionCount: 1 }, // เงินเดือน
 ];
 
 // Monthly Summary

@@ -51,7 +51,7 @@ export function CategoryGrid({
                 isSelected && 'scale-110 bg-primary/10'
               )}
             >
-              <span className="text-sm font-medium">{category.name.charAt(0)}</span>
+              <span className="text-sm font-medium">{category.icon || category.name.charAt(0)}</span>
             </div>
             <span
               className={cn(

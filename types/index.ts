@@ -42,6 +42,8 @@ export interface Category {
   name: string;
   type: CategoryType;
   order?: number; // For sorting categories
+  icon?: string;
+  color?: string;
 }
 
 export interface CategorySummary {

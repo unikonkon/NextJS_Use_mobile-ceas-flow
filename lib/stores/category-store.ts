@@ -2,9 +2,10 @@ import { create } from 'zustand';
 import type { Category } from '@/types';
 import { db, toStoredCategory, fromStoredCategory } from './db';
 import {
-  mockExpenseCategories,
-  mockIncomeCategories,
-} from '@/lib/mock/data';
+  expenseCategories as defaultExpenseCategories,
+  incomeCategories as defaultIncomeCategories,
+  enrichCategory,
+} from '@/lib/constants/categories';
 
 // ============================================
 // Store Interface
@@ -52,26 +53,28 @@ export const useCategoryStore = create<CategoryStore>((set, get) => ({
       const storedCategories = await db.categories.toArray();
 
       if (storedCategories.length === 0) {
-        // Seed with mock data on first run
-        const allMockCategories = [
-          ...mockExpenseCategories,
-          ...mockIncomeCategories,
+        // Seed with default categories from constants on first run
+        const allDefaultCategories = [
+          ...defaultExpenseCategories,
+          ...defaultIncomeCategories,
         ];
 
-        // Store to IndexedDB
+        // Store to IndexedDB (only name, type, order - not icon/color)
         await db.categories.bulkPut(
-          allMockCategories.map(toStoredCategory)
+          allDefaultCategories.map(toStoredCategory)
         );
 
         set({
-          expenseCategories: mockExpenseCategories,
-          incomeCategories: mockIncomeCategories,
+          expenseCategories: defaultExpenseCategories,
+          incomeCategories: defaultIncomeCategories,
           isLoading: false,
           isInitialized: true,
         });
       } else {
-        // Convert stored categories back to runtime format and sort by order
-        const categories = storedCategories.map(fromStoredCategory);
+        // Convert stored categories back to runtime format, enrich with icon/color, and sort by order
+        const categories = storedCategories
+          .map(fromStoredCategory)
+          .map(enrichCategory); // Add icon/color from constants
         const expense = categories
           .filter((c) => c.type === 'expense')
           .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
@@ -88,10 +91,10 @@ export const useCategoryStore = create<CategoryStore>((set, get) => ({
       }
     } catch (error) {
       console.error('Failed to load categories:', error);
-      // Fallback to mock data
+      // Fallback to default categories from constants
       set({
-        expenseCategories: mockExpenseCategories,
-        incomeCategories: mockIncomeCategories,
+        expenseCategories: defaultExpenseCategories,
+        incomeCategories: defaultIncomeCategories,
         isLoading: false,
         isInitialized: true,
       });
@@ -102,14 +105,18 @@ export const useCategoryStore = create<CategoryStore>((set, get) => ({
     const { expenseCategories, incomeCategories } = get();
     const existingCategories = input.type === 'expense' ? expenseCategories : incomeCategories;
 
-    const newCategory: Category = {
+    // Create base category (DB only stores id, name, type, order)
+    const baseCategory: Category = {
       id: `cat-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
       name: input.name,
       type: input.type,
       order: existingCategories.length, // Add at end
     };
 
-    // Update Zustand state immediately
+    // Enrich with icon/color from constants for UI display
+    const newCategory = enrichCategory(baseCategory);
+
+    // Update Zustand state immediately (with enriched data)
     if (input.type === 'expense') {
       set((state) => ({
         expenseCategories: [...state.expenseCategories, newCategory],
@@ -120,9 +127,9 @@ export const useCategoryStore = create<CategoryStore>((set, get) => ({
       }));
     }
 
-    // Persist to IndexedDB
+    // Persist to IndexedDB (only base data - no icon/color)
     try {
-      await db.categories.put(toStoredCategory(newCategory));
+      await db.categories.put(toStoredCategory(baseCategory));
     } catch (error) {
       console.error('Failed to persist category:', error);
     }

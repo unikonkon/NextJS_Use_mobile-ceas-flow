@@ -481,7 +481,7 @@ export function CategoryScroll({
                     !isSelected && 'group-hover:bg-muted'
                   )}
                 >
-                  {category.name.charAt(0)}
+                  {category.icon || category.name.charAt(0)}
                 </div>
                 <span
                   className={cn(
@@ -835,7 +835,7 @@ export function CategoryScroll({
                             : 'bg-muted text-muted-foreground'
                         )}
                       >
-                        {category.name.charAt(0)}
+                        {category.icon || category.name.charAt(0)}
                       </div>
 
                       {/* Category Name */}
@@ -995,7 +995,7 @@ export function CategoryScroll({
                           ? 'bg-expense/20 text-expense'
                           : 'bg-income/20 text-income'
                       )}>
-                        {categoryToDelete.name.charAt(0)}
+                        {categoryToDelete.icon || categoryToDelete.name.charAt(0)}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-foreground truncate">

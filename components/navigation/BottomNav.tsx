@@ -142,11 +142,11 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
             trigger={
               <Button
                 size="lg"
-                className="relative -top-5 size-14 rounded-full shadow-lg shadow-primary/25
+                className="relative -top-3 size-16 rounded-full shadow-lg shadow-primary/25
                   hover:scale-110 active:scale-95 transition-transform duration-200
                   bg-primary hover:bg-primary/90"
               >
-                <Plus className="size-6" />
+                <Plus className="size-10" />
               </Button>
             }
             expenseCategories={expenseCategories}

@@ -42,7 +42,7 @@ export function TransactionCard({
           isIncome && 'bg-income/10 text-income'
         )}
       >
-        {transaction.category.name.charAt(0)}
+        {transaction.category.icon || transaction.category.name.charAt(0)}
       </div>
 
       {/* Content */}
