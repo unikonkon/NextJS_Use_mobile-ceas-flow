@@ -169,7 +169,6 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
         // Seed with mock data on first run
         const baseTransactions = mockTransactions.map((t) => ({
           id: t.id,
-          bookId: t.bookId,
           walletId: t.walletId,
           categoryId: t.categoryId,
           type: t.type,
@@ -237,7 +236,6 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
     const now = input.date ?? new Date();
     const newTransaction: TransactionWithCategory = {
       id: `t-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-      bookId: 'b1',
       walletId: input.walletId ?? 'w1',
       categoryId: input.categoryId,
       type: input.type,
@@ -268,7 +266,6 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
       await db.transactions.put(
         toStoredTransaction({
           id: newTransaction.id,
-          bookId: newTransaction.bookId,
           walletId: newTransaction.walletId,
           categoryId: newTransaction.categoryId,
           type: newTransaction.type,
@@ -341,7 +338,6 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
       await db.transactions.put(
         toStoredTransaction({
           id: updatedTransaction.id,
-          bookId: updatedTransaction.bookId,
           walletId: updatedTransaction.walletId,
           categoryId: updatedTransaction.categoryId,
           type: updatedTransaction.type,

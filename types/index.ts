@@ -5,7 +5,6 @@ export type TransactionType = 'expense' | 'income';
 
 export interface Transaction {
   id: string;
-  bookId: string;
   walletId: string;
   categoryId: string;
   type: TransactionType;
@@ -60,7 +59,6 @@ export type WalletType = 'cash' | 'bank' | 'credit_card' | 'e_wallet' | 'savings
 
 export interface Wallet {
   id: string;
-  bookId: string;
   name: string;
   type: WalletType;
   icon: string;

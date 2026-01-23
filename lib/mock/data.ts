@@ -13,8 +13,7 @@ import {
 export const mockWallets: Wallet[] = [
   {
     id: 'w1',
-    bookId: 'b1',
-    name: 'เงินสด',
+        name: 'เงินสด',
     type: 'cash',
     icon: '💵',
     color: 'green',
@@ -26,8 +25,7 @@ export const mockWallets: Wallet[] = [
   },
   {
     id: 'w2',
-    bookId: 'b1',
-    name: 'ธ.กสิกรไทย',
+        name: 'ธ.กสิกรไทย',
     type: 'bank',
     icon: '🏦',
     color: 'green',
@@ -39,8 +37,7 @@ export const mockWallets: Wallet[] = [
   },
   {
     id: 'w3',
-    bookId: 'b1',
-    name: 'PromptPay',
+        name: 'PromptPay',
     type: 'e_wallet',
     icon: '📱',
     color: 'blue',
@@ -52,8 +49,7 @@ export const mockWallets: Wallet[] = [
   },
   {
     id: 'w4',
-    bookId: 'b1',
-    name: 'บัตรเครดิต KBank',
+        name: 'บัตรเครดิต KBank',
     type: 'credit_card',
     icon: '💳',
     color: 'purple',
@@ -81,8 +77,7 @@ export const mockTransactions: TransactionWithCategory[] = [
   // Today
   {
     id: 't1',
-    bookId: 'b1',
-    walletId: 'w1',
+        walletId: 'w1',
     categoryId: '1',
     type: 'expense',
     amount: 120,
@@ -96,8 +91,7 @@ export const mockTransactions: TransactionWithCategory[] = [
   },
   {
     id: 't2',
-    bookId: 'b1',
-    walletId: 'w2',
+        walletId: 'w2',
     categoryId: '3',
     type: 'expense',
     amount: 45,
@@ -111,8 +105,7 @@ export const mockTransactions: TransactionWithCategory[] = [
   },
   {
     id: 't3',
-    bookId: 'b1',
-    walletId: 'w3',
+        walletId: 'w3',
     categoryId: '11',
     type: 'expense',
     amount: 299,
@@ -127,8 +120,7 @@ export const mockTransactions: TransactionWithCategory[] = [
   // Yesterday
   {
     id: 't4',
-    bookId: 'b1',
-    walletId: 'w1',
+        walletId: 'w1',
     categoryId: '1',
     type: 'expense',
     amount: 250,
@@ -142,8 +134,7 @@ export const mockTransactions: TransactionWithCategory[] = [
   },
   {
     id: 't5',
-    bookId: 'b1',
-    walletId: 'w2',
+        walletId: 'w2',
     categoryId: '101',
     type: 'income',
     amount: 45000,
@@ -157,8 +148,7 @@ export const mockTransactions: TransactionWithCategory[] = [
   },
   {
     id: 't6',
-    bookId: 'b1',
-    walletId: 'w4',
+        walletId: 'w4',
     categoryId: '18',
     type: 'expense',
     amount: 590,
@@ -173,8 +163,7 @@ export const mockTransactions: TransactionWithCategory[] = [
   // Two days ago
   {
     id: 't7',
-    bookId: 'b1',
-    walletId: 'w1',
+        walletId: 'w1',
     categoryId: '14',
     type: 'expense',
     amount: 850,
@@ -188,8 +177,7 @@ export const mockTransactions: TransactionWithCategory[] = [
   },
   {
     id: 't8',
-    bookId: 'b1',
-    walletId: 'w2',
+        walletId: 'w2',
     categoryId: '6',
     type: 'expense',
     amount: 8500,

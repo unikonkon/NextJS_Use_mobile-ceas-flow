@@ -8,7 +8,6 @@ import type { Transaction, Category, Wallet } from '@/types';
 // Stored transaction (dates as ISO strings for IndexedDB)
 export interface StoredTransaction {
   id: string;
-  bookId: string;
   walletId: string;
   categoryId: string;
   type: 'expense' | 'income';
@@ -31,7 +30,6 @@ export interface StoredCategory {
 
 export interface StoredWallet {
   id: string;
-  bookId: string;
   name: string;
   type: 'cash' | 'bank' | 'credit_card' | 'e_wallet' | 'savings';
   icon: string;
@@ -55,23 +53,23 @@ export class AppDatabase extends Dexie {
     super('CeasFlowDB');
 
     this.version(1).stores({
-      transactions: 'id, bookId, walletId, categoryId, type, date, createdAt',
+      transactions: 'id, walletId, categoryId, type, date, createdAt',
       categories: 'id, type',
-      wallets: 'id, bookId, type',
+      wallets: 'id, type',
     });
 
     // Version 2: Add order field to categories for sorting
     this.version(2).stores({
-      transactions: 'id, bookId, walletId, categoryId, type, date, createdAt',
+      transactions: 'id, walletId, categoryId, type, date, createdAt',
       categories: 'id, type, order',
-      wallets: 'id, bookId, type',
+      wallets: 'id, type',
     });
 
     // Version 3: Add icon field to categories for custom icons
     this.version(3).stores({
-      transactions: 'id, bookId, walletId, categoryId, type, date, createdAt',
+      transactions: 'id, walletId, categoryId, type, date, createdAt',
       categories: 'id, type, order',
-      wallets: 'id, bookId, type',
+      wallets: 'id, type',
     });
   }
 }
