@@ -58,10 +58,10 @@ export function CategoryScroll({
 
   // Settings modal state
   const [showSettings, setShowSettings] = useState(false);
-  const [visibleCount, setVisibleCount] = useState(8);
+  const [visibleCount, setVisibleCount] = useState(40);
   const [orderedCategories, setOrderedCategories] = useState<Category[]>(categories);
   const [localCategories, setLocalCategories] = useState<Category[]>(categories);
-  const [localVisibleCount, setLocalVisibleCount] = useState(8);
+  const [localVisibleCount, setLocalVisibleCount] = useState(40);
   const [hasChanges, setHasChanges] = useState(false);
 
   // Drag state (for both mouse and touch)
@@ -379,7 +379,7 @@ export function CategoryScroll({
   const displayCategories = orderedCategories.slice(0, visibleCount);
 
   // Visible count options
-  const visibleCountOptions = [8, 10, 12, 14, 16, 18];
+  const visibleCountOptions = [5, 6, 7, 10, 12, 14];
   const uniqueOptions = [...new Set([...visibleCountOptions, localCategories.length])].filter(
     (n) => n <= localCategories.length
   );
@@ -449,7 +449,7 @@ export function CategoryScroll({
         ref={scrollRef}
         className={cn(
           'relative px-4 py-1.5 scroll-smooth',
-          'max-h-[160px] overflow-y-auto'
+          'max-h-[175px] overflow-y-auto'
         )}
       >
         <div className="flex flex-wrap gap-1 content-start justify-between">
@@ -985,7 +985,7 @@ export function CategoryScroll({
                             <span className="text-sm">{group.emoji}</span>
                             <span className={cn(
                               'transition-all duration-200',
-                              expandedGroup === group.id ? 'max-w-[80px] opacity-100' : 'max-w-0 opacity-0 overflow-hidden'
+                             'max-w-[80px] opacity-100' 
                             )}>
                               {group.name}
                             </span>
@@ -1084,27 +1084,7 @@ export function CategoryScroll({
                           </div>
                         )}
                       </div>
-
-                      {/* Footer */}
-                      {newCategoryIcon && (
-                        <div className="p-2 border-t border-border/30 bg-muted/20">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setNewCategoryIcon(null);
-                              setExpandedGroup(null);
-                            }}
-                            className={cn(
-                              'w-full py-2 rounded-lg text-xs font-medium',
-                              'border border-dashed border-muted-foreground/30',
-                              'text-muted-foreground hover:text-foreground hover:border-foreground/50',
-                              'transition-all duration-200 hover:bg-muted/30'
-                            )}
-                          >
-                            ล้างการเลือก • ใช้ตัวอักษรแทน
-                          </button>
-                        </div>
-                      )}
+                    
                     </div>
                   )}
                 </div>

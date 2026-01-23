@@ -12,7 +12,8 @@ export function formatCurrency(
     ...options,
   });
 
-  return formatter.format(amount);
+  // return formatter.format(amount);
+  return formatter.format(amount).replace(/฿\s*/g, '').trim();
 }
 
 // Format number with commas

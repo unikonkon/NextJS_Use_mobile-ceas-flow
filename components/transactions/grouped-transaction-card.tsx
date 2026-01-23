@@ -50,7 +50,7 @@ export function GroupedTransactionCard({
     <div
       className={cn(
         'relative overflow-hidden rounded-2xl transition-all duration-300',
-        'border border-border/30',
+        'border-b border-border/30',
         isExpanded
           ? 'bg-card shadow-lg'
           : 'bg-card/50 hover:bg-card hover:shadow-md',
@@ -62,7 +62,7 @@ export function GroupedTransactionCard({
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className={cn(
-          'flex w-full items-center gap-3 p-3 text-left',
+          'flex w-full items-center gap-3 px-3 py-2 text-left',
           'transition-all duration-200',
           'hover:bg-accent/30 active:scale-[0.995]'
         )}
@@ -132,9 +132,21 @@ export function GroupedTransactionCard({
           </div>
         </div>
 
+        {/* Expand Arrow */}
+        <div
+          className={cn(
+            'flex size-7 items-center justify-center rounded-full',
+            'bg-muted/50 transition-all duration-300',
+            isExpanded && 'rotate-180 bg-muted'
+          )}
+        >
+          <ChevronDown className="size-4 text-muted-foreground" />
+        </div>
+
         {/* Amount & Expand Indicator */}
         <div className="flex items-center gap-2">
           <div className="flex flex-col items-end">
+            <span className="text-[10px] text-muted-foreground">รวม</span>
             <span
               className={cn(
                 'font-numbers text-lg font-bold tabular-nums',
@@ -145,19 +157,9 @@ export function GroupedTransactionCard({
             >
               {amountDisplay}
             </span>
-            <span className="text-[10px] text-muted-foreground">รวม</span>
           </div>
 
-          {/* Expand Arrow */}
-          <div
-            className={cn(
-              'flex size-7 items-center justify-center rounded-full',
-              'bg-muted/50 transition-all duration-300',
-              isExpanded && 'rotate-180 bg-muted'
-            )}
-          >
-            <ChevronDown className="size-4 text-muted-foreground" />
-          </div>
+
         </div>
       </button>
 

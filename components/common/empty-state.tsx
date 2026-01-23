@@ -29,7 +29,7 @@ export function EmptyState({
       )}
     >
       {/* Icon */}
-      <div className="flex size-20 items-center justify-center rounded-3xl bg-muted/50 text-4xl">
+      <div className="flex size-34 items-center justify-center rounded-3xl bg-muted/50 text-8xl">
         {icon}
       </div>
 
