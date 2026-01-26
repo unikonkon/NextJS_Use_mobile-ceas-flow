@@ -375,6 +375,7 @@ function DonutChart({
   chartKey: string;
 }) {
   const [isVisible, setIsVisible] = useState(false);
+  const [isSmallCategoriesExpanded, setIsSmallCategoriesExpanded] = useState(false);
 
   useEffect(() => {
     setIsVisible(false);
@@ -572,36 +573,54 @@ function DonutChart({
 
       {/* Legend - Small categories (< 3%) with icon + name */}
       {smallCategories.length > 0 && (
-        <div className="mt-5">
-          {/* Header */}
-          <div className="flex items-center justify-center gap-2 mb-2">
+        <div className="mt-7">
+          {/* Header - Expandable Button */}
+          <button
+            onClick={() => setIsSmallCategoriesExpanded(!isSmallCategoriesExpanded)}
+            className="w-full flex items-center justify-center gap-2 mb-2 hover:opacity-80 transition-opacity"
+          >
             <div className="h-px flex-1 bg-border/40" />
-            <span className="text-[10px] text-muted-foreground px-2 font-medium">
-              หมวดอื่นๆ ({smallCategories.length})
-            </span>
-            <div className="h-px flex-1 bg-border/40" />
-          </div>
-
-          {/* Small categories grid */}
-          <div className="flex flex-wrap justify-center gap-1.5">
-            {smallCategories.map((item, idx) => (
-              <div
-                key={item.summary.category.id}
+            <div className="flex items-center gap-1.5 px-2">
+              <span className="text-[10px] text-muted-foreground font-medium">
+                หมวดอื่นๆ ({smallCategories.length})
+              </span>
+              <ChevronDown
                 className={cn(
-                  'flex items-center gap-1 px-2 py-1 rounded-lg shrink-0',
-                  'bg-muted/30 border border-border/20',
-                  'transition-all duration-300 hover:bg-muted/50',
-                  isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-90'
+                  'size-3 text-muted-foreground transition-transform duration-200',
+                  isSmallCategoriesExpanded && 'rotate-180'
                 )}
-                style={{ transitionDelay: `${idx * 30 + 500}ms` }}
-              >
-                <span className="text-xs">{item.summary.category.icon}</span>
-                <span className="text-[10px] text-muted-foreground max-w-[65px] truncate">
-                  {item.summary.category.name}
-                </span>
-                <span className="text-[10px] text-muted-foreground"> {item.percentage.toFixed(1)}% </span>
-              </div>
-            ))}
+              />
+            </div>
+            <div className="h-px flex-1 bg-border/40" />
+          </button>
+
+          {/* Small categories grid - Expandable */}
+          <div
+            className={cn(
+              'grid transition-all duration-100 ease-in-out overflow-hidden',
+              isSmallCategoriesExpanded ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+            )}
+          >
+            <div className="flex flex-wrap justify-center gap-1.5 min-h-0">
+              {smallCategories.map((item, idx) => (
+                <div
+                  key={item.summary.category.id}
+                  className={cn(
+                    'flex items-center gap-1 px-2 py-1 rounded-lg shrink-0',
+                    'bg-muted/30 border border-border/20',
+                    'transition-all duration-100 hover:bg-muted/50',
+                    isVisible && isSmallCategoriesExpanded ? 'opacity-100 scale-100' : 'opacity-0 scale-90'
+                  )}
+                  style={{ transitionDelay: isSmallCategoriesExpanded ? `${idx * 30 + 50}ms` : '0ms' }}
+                >
+                  <span className="text-xs">{item.summary.category.icon}</span>
+                  <span className="text-[10px] text-muted-foreground max-w-[65px] truncate">
+                    {item.summary.category.name}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground"> {item.percentage.toFixed(1)}% </span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
@@ -721,11 +740,10 @@ function CategoryDetailSheet({
             <div className="flex-1">
               <SheetTitle className="text-xl">{category.name}</SheetTitle>
               <SheetDescription className="flex items-center gap-2 mt-1">
-                <span>{transactions.length} รายการ</span>
-                <span className="text-muted-foreground/50">•</span>
                 <span style={{ color }}>
                   ฿{totalAmount.toLocaleString()}
                 </span>
+                <span className="text-muted-foreground pl-4">เดือน {getFullMonthName(transactions[0].date.getMonth())}</span>
               </SheetDescription>
             </div>
           </div>
@@ -1176,7 +1194,7 @@ export function AnalyticsTab() {
         }
       />
 
-      <PageContainer className="pt-4 space-y-5">
+      <PageContainer className="pt-4 space-y-3">
         {/* Filter Section - Expandable */}
         <div className="bg-linear-to-br from-card to-muted/20 rounded-2xl border border-border/50 overflow-hidden">
           {/* Filter Header */}
@@ -1281,10 +1299,9 @@ export function AnalyticsTab() {
         </div>
 
         {/* Donut Chart Section */}
-        <div className="bg-linear-to-br from-card via-card to-muted/20 rounded-3xl px-2 py-4 border border-border/50 shadow-lg shadow-black/5">
+        <div className="bg-linear-to-br from-card via-card to-muted/20 rounded-3xl px-2 py-2 border border-border/50 shadow-lg shadow-black/5">
           <div className="text-center">
             <h2 className="font-semibold text-foreground">รายจ่ายตามหมวดหมู่</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">{periodLabel}</p>
           </div>
 
           <DonutChart
