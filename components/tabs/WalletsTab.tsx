@@ -497,6 +497,90 @@ interface WalletDetailViewProps {
   onDeleteAllTransactions: () => void;
 }
 
+// ============================================
+// Wallet Detail Loading Skeleton
+// ============================================
+function WalletDetailSkeleton() {
+  return (
+    <>
+      {/* Header Skeleton */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
+        <div className="size-9 rounded-lg bg-muted animate-pulse" />
+        <div className="h-5 w-32 rounded-md bg-muted animate-pulse" />
+        <div className="size-9 rounded-lg bg-muted animate-pulse" />
+      </div>
+
+      <div className="px-4 pt-4 pb-20">
+        {/* Wallet Summary Card Skeleton */}
+        <div className="relative overflow-hidden rounded-2xl mb-4 bg-muted/30 border border-border/30">
+          <div className="p-5 space-y-4">
+            {/* Icon and Name */}
+            <div className="flex items-center gap-4">
+              <div className="size-16 rounded-xl bg-muted animate-pulse" />
+              <div className="space-y-2">
+                <div className="h-5 w-28 rounded-md bg-muted animate-pulse" />
+                <div className="h-4 w-20 rounded-md bg-muted animate-pulse" />
+              </div>
+              <div className="size-9 rounded-lg bg-muted animate-pulse ml-auto" />
+            </div>
+
+            {/* Balance Skeleton */}
+            <div className="space-y-2">
+              <div className="h-4 w-16 rounded-md bg-muted animate-pulse" />
+              <div className="h-8 w-40 rounded-md bg-muted animate-pulse" />
+            </div>
+
+            {/* Stats Skeleton */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-xl bg-muted/50 p-3 space-y-2">
+                <div className="h-4 w-16 rounded-md bg-muted animate-pulse" />
+                <div className="h-6 w-24 rounded-md bg-muted animate-pulse" />
+              </div>
+              <div className="rounded-xl bg-muted/50 p-3 space-y-2">
+                <div className="h-4 w-16 rounded-md bg-muted animate-pulse" />
+                <div className="h-6 w-24 rounded-md bg-muted animate-pulse" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Section Header Skeleton */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="h-5 w-32 rounded-md bg-muted animate-pulse" />
+          <div className="flex gap-2">
+            <div className="h-8 w-14 rounded-lg bg-muted animate-pulse" />
+            <div className="h-8 w-20 rounded-lg bg-muted animate-pulse" />
+          </div>
+        </div>
+
+        {/* Search Skeleton */}
+        <div className="h-10 w-full rounded-xl bg-muted animate-pulse mb-3" />
+
+        {/* Transaction Items Skeleton */}
+        <div className="space-y-2">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div
+              key={i}
+              className="flex items-center gap-3 rounded-xl p-3 bg-muted/20"
+              style={{ animationDelay: `${i * 0.1}s` }}
+            >
+              <div className="size-10 rounded-xl bg-muted animate-pulse" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 w-24 rounded-md bg-muted animate-pulse" />
+                <div className="h-3 w-16 rounded-md bg-muted animate-pulse" />
+              </div>
+              <div className="space-y-2 text-right">
+                <div className="h-4 w-20 rounded-md bg-muted animate-pulse ml-auto" />
+                <div className="h-3 w-12 rounded-md bg-muted animate-pulse ml-auto" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+}
+
 function WalletDetailView({
   wallet,
   transactions,
@@ -508,6 +592,7 @@ function WalletDetailView({
   onEditTransaction,
   onDeleteAllTransactions,
 }: WalletDetailViewProps) {
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -515,6 +600,15 @@ function WalletDetailView({
   const [deleteTarget, setDeleteTarget] = useState<'selected' | 'all' | 'wallet' | null>(null);
 
   const typeConfig = getWalletTypeConfig(wallet.type);
+
+  // Loading effect when entering wallet detail
+  useEffect(() => {
+    setIsLoading(true);
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [wallet.id]);
 
   const filteredTransactions = useMemo(() => {
     if (!searchQuery.trim()) return transactions;
@@ -551,6 +645,11 @@ function WalletDetailView({
     setShowDeleteConfirm(false);
     setDeleteTarget(null);
   };
+
+  // Show loading skeleton
+  if (isLoading) {
+    return <WalletDetailSkeleton />;
+  }
 
   return (
     <>

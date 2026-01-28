@@ -90,15 +90,15 @@ export function DayGroup({
           </div>
 
           {/* Day Summary */}
-          <div className="flex items-center gap-3 text-xs font-medium font-numbers">
+          <div className="flex items-center gap-3 text-xs font-semibold font-numbers">
             {hasIncome && hasExpense && (
               <span className="text-income/80">
-                รับ{formatCurrency(summary.income)}
+                +{formatCurrency(summary.income)}
               </span>
             )}
             {hasIncome && hasExpense && (
               <span className="text-expense/80">
-                ใช้{formatCurrency(summary.expense)}
+                -{formatCurrency(summary.expense)}
               </span>
             )}
             <span className={cn(

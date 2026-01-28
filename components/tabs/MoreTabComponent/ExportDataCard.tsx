@@ -186,9 +186,6 @@ export function ExportDataCard() {
         }}
       />
 
-      {/* Animated corner accent */}
-      <div className="absolute -right-8 -top-8 size-24 rounded-full bg-linear-to-br from-income/20 to-transparent blur-xl transition-all duration-500 group-hover:scale-150" />
-
       <CardContent className="relative p-5">
         {/* Header */}
         <div className="mb-5 flex items-center gap-3">

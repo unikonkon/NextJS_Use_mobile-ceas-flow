@@ -751,6 +751,20 @@ html.theme-neutral.dark {
 .animate-pulse-fast {
   animation: pulse-fast 0.5s ease-in-out infinite;
 }
+
+/* Bounce Subtle - for nav icons */
+@keyframes bounce-subtle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+.animate-bounce-subtle {
+  animation: bounce-subtle 0.3s ease-out;
+}
 /* Stagger Children Animation */
 .stagger-children > * {
   opacity: 0;

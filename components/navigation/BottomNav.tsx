@@ -41,7 +41,7 @@ const navItems: NavItem[] = [
         <path d="M2.273 5.625A4.483 4.483 0 0 1 5.25 4.5h13.5c1.141 0 2.183.425 2.977 1.125A3 3 0 0 0 18.75 3H5.25a3 3 0 0 0-2.977 2.625ZM2.273 8.625A4.483 4.483 0 0 1 5.25 7.5h13.5c1.141 0 2.183.425 2.977 1.125A3 3 0 0 0 18.75 6H5.25a3 3 0 0 0-2.977 2.625ZM5.25 9a3 3 0 0 0-3 3v6a3 3 0 0 0 3 3h13.5a3 3 0 0 0 3-3v-6a3 3 0 0 0-3-3H15a.75.75 0 0 0-.75.75 2.25 2.25 0 0 1-4.5 0A.75.75 0 0 0 9 9H5.25Z" />
       </svg>
     ),
-    label: 'กระเป๋าเงิน',
+    label: 'กระเป๋า',
   },
   {
     id: 'analytics',
@@ -86,7 +86,8 @@ function NavButton({ item, isActive, onClick }: NavButtonProps) {
     <button
       onClick={onClick}
       className={cn(
-        'relative flex flex-col items-center justify-center gap-1 rounded-2xl px-3 transition-all duration-300',
+        'w-1/2 relative flex flex-col items-center justify-center gap-1 rounded-2xl px-3',
+        'transition-all duration-200 active:scale-90',
         isActive
           ? 'text-primary py-1'
           : 'text-muted-foreground hover:text-foreground py-2'
@@ -95,11 +96,14 @@ function NavButton({ item, isActive, onClick }: NavButtonProps) {
       {isActive && (
         <span className="absolute inset-0 rounded-2xl bg-primary/10 animate-scale-in" />
       )}
-      <span className="relative z-10">
+      <span className={cn(
+        'relative z-10 transition-transform duration-200',
+        isActive && 'animate-bounce-subtle'
+      )}>
         {isActive ? item.activeIcon : item.icon}
       </span>
       <span className={cn(
-        'relative z-10 text-[10px] font-medium tracking-wide',
+        'relative z-10 text-[10px] font-medium tracking-wide transition-all duration-200',
         isActive && 'font-semibold'
       )}>
         {item.label}

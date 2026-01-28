@@ -75,13 +75,13 @@ export function HomeTab() {
   return (
     <>
       <Header
-        rightAction={
-          <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon-sm" className="rounded-full">
-              <Calendar className="size-5" />
-            </Button>
-          </div>
-        }
+        // rightAction={
+        //   <div className="flex items-center gap-1">
+        //     <Button variant="ghost" size="icon-sm" className="rounded-full">
+        //       <Calendar className="size-5" />
+        //     </Button>
+        //   </div>
+        // }
         leftAction={
           <WalletSelector
             wallets={wallets}

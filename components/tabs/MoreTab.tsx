@@ -163,54 +163,60 @@ export function MoreTab() {
       <Header title="การตั้งค่า" />
 
       <PageContainer className="my-4">
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col pt-3">
           <SettingsMenuItem
             icon={<User className="size-5" />}
             title="บัญชี"
             onClick={handleAccountClick}
           />
+        </div>
 
+        <div className="flex flex-col pt-3">
           <SettingsMenuItem
             icon={<Palette className="size-5" />}
             title="การตั้งค่า ธีมสี"
             onClick={handleThemeClick}
           />
+        </div>
 
-          {/* Theme Selector */}
-          {showThemeSelector && (
-            <Card className="bg-card border-border animate-slide-up">
-              <CardContent className="p-2">
-                <ThemeSelector />
-              </CardContent>
-            </Card>
-          )}
+        {/* Theme Selector */}
+        {showThemeSelector && (
+          <Card className="bg-card border-border animate-slide-up mt-1">
+            <CardContent className="p-2">
+              <ThemeSelector />
+            </CardContent>
+          </Card>
+        )}
 
+        <div className="flex flex-col pt-3">
           <SettingsMenuItem
             icon={<FileSpreadsheet className="size-5" />}
             title="ส่งออกข้อมูล Excel"
             onClick={handleExportClick}
           />
+        </div>
 
-          {/* Export Data Card */}
-          {showExportData && (
-            <div className="animate-slide-up">
-              <ExportDataCard />
-            </div>
-          )}
+        {/* Export Data Card */}
+        {showExportData && (
+          <div className="animate-slide-up mt-1">
+            <ExportDataCard />
+          </div>
+        )}
 
+        <div className="flex flex-col pt-3">
           <SettingsMenuItem
             icon={<Database className="size-5" />}
             title="ข้อมูล Storage"
             onClick={handleStorageClick}
           />
-
-          {/* Storage Info Card */}
-          {showStorageInfo && (
-            <div className="animate-slide-up">
-              <StorageInfoCard />
-            </div>
-          )}
         </div>
+
+        {/* Storage Info Card */}
+        {showStorageInfo && (
+          <div className="animate-slide-up mt-1">
+            <StorageInfoCard />
+          </div>
+        )}
       </PageContainer>
     </>
   );
