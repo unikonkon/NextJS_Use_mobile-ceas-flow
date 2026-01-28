@@ -183,12 +183,12 @@ export function ReusedTransactionSheet({
                 </SheetDescription>
               </div>
             </div>
-            <button
+            {/* <button
               onClick={onClose}
               className="size-9 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
             >
               <X className="size-5 text-muted-foreground" />
-            </button>
+            </button> */}
           </div>
         </SheetHeader>
 

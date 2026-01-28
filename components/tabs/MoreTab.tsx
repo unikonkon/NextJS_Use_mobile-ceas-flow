@@ -3,10 +3,10 @@
 import { useState } from 'react';
 import { Header, PageContainer } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
-import { User, Palette, ChevronRight, Check, Database, FileSpreadsheet } from 'lucide-react';
+import { User, Palette, ChevronRight, Check, Database, FileSpreadsheet, PlusCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useThemeStore, type ThemeType } from '@/lib/stores/theme-store';
-import { StorageInfoCard, ExportDataCard } from './MoreTabComponent';
+import { StorageInfoCard, ExportDataCard, AutoOpenSettingCard } from './MoreTabComponent';
 
 interface SettingsMenuItemProps {
   icon: React.ReactNode;
@@ -140,6 +140,7 @@ export function MoreTab() {
   const [showThemeSelector, setShowThemeSelector] = useState(false);
   const [showStorageInfo, setShowStorageInfo] = useState(false);
   const [showExportData, setShowExportData] = useState(false);
+  const [showAutoOpenSetting, setShowAutoOpenSetting] = useState(false);
 
   const handleAccountClick = () => {
     // TODO: Navigate to account settings
@@ -156,6 +157,10 @@ export function MoreTab() {
 
   const handleExportClick = () => {
     setShowExportData(!showExportData);
+  };
+
+  const handleAutoOpenClick = () => {
+    setShowAutoOpenSetting(!showAutoOpenSetting);
   };
 
   return (
@@ -186,6 +191,21 @@ export function MoreTab() {
               <ThemeSelector />
             </CardContent>
           </Card>
+        )}
+
+        <div className="flex flex-col pt-3">
+          <SettingsMenuItem
+            icon={<PlusCircle className="size-5" />}
+            title="เปิดหน้าเพิ่มรายการอัตโนมัติ"
+            onClick={handleAutoOpenClick}
+          />
+        </div>
+
+        {/* Auto Open Setting Card */}
+        {showAutoOpenSetting && (
+          <div className="animate-slide-up mt-1">
+            <AutoOpenSettingCard />
+          </div>
         )}
 
         <div className="flex flex-col pt-3">

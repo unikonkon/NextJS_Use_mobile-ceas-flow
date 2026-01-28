@@ -92,7 +92,7 @@ export function HomeTab() {
         }
       />
 
-      <PageContainer className="pt-4">
+      <PageContainer className="pt-2">
         {/* Month Picker */}
         <div className="mb-2">
           <MonthPicker

@@ -1,10 +1,11 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AddTransactionSheet } from '@/components/transactions';
-import { useTransactionStore, useCategoryStore } from '@/lib/stores';
+import { useTransactionStore, useCategoryStore, useSettingsStore } from '@/lib/stores';
 import { TabType } from '@/hooks/useTabNavigation';
 
 interface NavItem {
@@ -122,6 +123,26 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
   const expenseCategories = useCategoryStore((s) => s.expenseCategories);
   const incomeCategories = useCategoryStore((s) => s.incomeCategories);
 
+  // Settings store for auto-open feature
+  const autoOpenTransaction = useSettingsStore((s) => s.autoOpenTransaction);
+  const hasAutoOpened = useSettingsStore((s) => s.hasAutoOpened);
+  const setHasAutoOpened = useSettingsStore((s) => s.setHasAutoOpened);
+
+  // Controlled sheet state
+  const [sheetOpen, setSheetOpen] = useState(false);
+
+  // Auto-open sheet on first load if setting is enabled
+  useEffect(() => {
+    if (autoOpenTransaction && !hasAutoOpened) {
+      // Small delay to ensure UI is ready
+      const timer = setTimeout(() => {
+        setSheetOpen(true);
+        setHasAutoOpened(true);
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [autoOpenTransaction, hasAutoOpened, setHasAutoOpened]);
+
   const leftItems = navItems.slice(0, 2);
   const rightItems = navItems.slice(2, 4);
 
@@ -156,6 +177,8 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
             expenseCategories={expenseCategories}
             incomeCategories={incomeCategories}
             onSubmit={addTransaction}
+            open={sheetOpen}
+            onOpenChange={setSheetOpen}
           />
         </div>
 

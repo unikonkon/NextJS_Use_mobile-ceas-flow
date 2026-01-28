@@ -19,11 +19,13 @@ import {
   ToggleRight,
   ChevronDown,
   ChevronUp,
+  LayoutGrid,
 } from 'lucide-react';
 import type { Category, TransactionType, CategoryType } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { iconGroups } from '@/lib/constants/categories';
+import { CategorySelectSheet } from './category-selete';
 
 interface CategoryScrollProps {
   categories: Category[];
@@ -82,6 +84,9 @@ export function CategoryScroll({
   // Delete mode state
   const [isDeleteMode, setIsDeleteMode] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
+
+  // Category select sheet state
+  const [showCategorySelect, setShowCategorySelect] = useState(false);
 
   // Load visible count from localStorage
   useEffect(() => {
@@ -404,15 +409,27 @@ export function CategoryScroll({
     <div className="relative border-b border-border/50">
       {/* Header */}
       <div className="flex items-center justify-between px-4">
-        <span className="text-xs font-medium text-muted-foreground">{label}</span>
+        <button
+          onClick={() => setShowCategorySelect(true)}
+          className={cn(
+            "flex items-center gap-1 text-xs font-medium rounded-full px-2 py-1 transition-all border border-border/50 shadow-xs",
+            "text-muted-foreground hover:text-foreground hover:bg-muted/50",
+            transactionType === 'expense'
+              ? 'hover:text-expense'
+              : 'hover:text-income'
+          )}
+        >
+          <LayoutGrid className="size-3" />
+          <span>เลือกหมวดหมู่อื่นๆ</span>
+        </button>
 
         <div className="flex items-center gap-2">
 
           {/* Selected Category Badge */}
           {selectedCategory && (
-            <span
+            <div
               className={cn(
-                'flex items-center gap-1 px-2.5 py-1 rounded-full text-xs',
+                'flex items-center px-2.5 py-1 rounded-full text-xs ',
                 'animate-in slide-in-from-right-2 duration-300',
                 'shadow-sm',
                 transactionType === 'expense' && 'text-expense bg-expense/10',
@@ -420,8 +437,13 @@ export function CategoryScroll({
               )}
             >
               <Check className="size-3" />
-              {selectedCategory.name}
-            </span>
+              <span className="flex size-5 items-center justify-center rounded-lg text-lg shrink-0 mr-1">
+                {selectedCategory.icon || selectedCategory.name.charAt(0)}
+              </span>
+              <span className="text-[10px] font-medium text-muted-foreground whitespace-nowrap max-w-[80px] truncate">
+                {selectedCategory.name}
+              </span>
+            </div>
           )}
 
           {/* Settings Button */}
@@ -506,6 +528,16 @@ export function CategoryScroll({
 
         </div>
       </div>
+
+      {/* Category Select Sheet */}
+      <CategorySelectSheet
+        open={showCategorySelect}
+        onOpenChange={setShowCategorySelect}
+        categories={categories}
+        selectedCategory={selectedCategory}
+        transactionType={transactionType}
+        onSelect={onSelect}
+      />
 
       {/* Settings Modal - Inline like showDeleteConfirm */}
       {showSettings && (

@@ -35,6 +35,9 @@ interface AddTransactionSheetProps {
     date?: Date;
     note?: string;
   }) => void;
+  // Controlled mode props
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export function AddTransactionSheet({
@@ -42,8 +45,15 @@ export function AddTransactionSheet({
   expenseCategories,
   incomeCategories,
   onSubmit,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
 }: AddTransactionSheetProps) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+
+  // Use controlled state if provided, otherwise use internal state
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+  const setOpen = isControlled ? (controlledOnOpenChange ?? (() => {})) : setInternalOpen;
   const [transactionType, setTransactionType] = useState<TransactionType>('expense');
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [note, setNote] = useState('');
@@ -272,15 +282,14 @@ export function AddTransactionSheet({
                   </div>
 
                   {/* Note Input - Compact */}
-                  <div className="flex items-center gap-1.5 px-2 py-1 mt-1 rounded-lg bg-muted/30 transition-all focus-within:bg-muted/50 focus-within:ring-1 focus-within:ring-primary/30">
-                    <FileText className="size-3 text-muted-foreground/60 shrink-0" />
+                  <div className="flex items-center gap-1.5 py-1 mt-1 rounded-lg bg-muted/30 transition-all focus-within:bg-muted/50 focus-within:ring-1 focus-within:ring-primary/30">
                     <Input
                       value={note}
                       onChange={(e) => setNote(e.target.value)}
                       onFocus={() => setIsNoteInputFocused(true)}
                       onBlur={() => setIsNoteInputFocused(false)}
                       placeholder="บันทึก..."
-                      className="h-5 border-0 bg-transparent p-0 text-[11px] focus-visible:ring-0 placeholder:text-muted-foreground/40"
+                      className="h-8 text-[11px]"
                     />
                   </div>
                 </div>

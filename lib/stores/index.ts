@@ -5,5 +5,6 @@ export { useWalletStore } from './wallet-store';
 export { useThemeStore } from './theme-store';
 export type { ThemeType } from './theme-store';
 export { useAnalysisStore } from './analysis-store';
+export { useSettingsStore } from './settings-store';
 export { db } from './db';
 export type { Analysis, MatchType } from './db';
