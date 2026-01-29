@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -87,24 +87,24 @@ function NavButton({ item, isActive, onClick }: NavButtonProps) {
     <button
       onClick={onClick}
       className={cn(
-        'w-1/2 relative flex flex-col items-center justify-center gap-1 rounded-2xl px-3',
-        'transition-all duration-200 active:scale-90',
+        'w-1/2 relative flex flex-col items-center justify-center gap-1 rounded-2xl px-3 py-1.5',
+        'transition-colors duration-50 active:scale-95 touch-manipulation',
         isActive
-          ? 'text-primary py-1'
-          : 'text-muted-foreground hover:text-foreground py-2'
+          ? 'text-primary'
+          : 'text-muted-foreground hover:text-foreground'
       )}
     >
       {isActive && (
-        <span className="absolute inset-0 rounded-2xl bg-primary/10 animate-scale-in" />
+        <span className="absolute inset-0 rounded-2xl bg-primary/10 animate-scale-in pointer-events-none" />
       )}
       <span className={cn(
-        'relative z-10 transition-transform duration-200',
+        'relative z-10 transition-transform duration-50 pointer-events-none',
         isActive && 'animate-bounce-subtle'
       )}>
         {isActive ? item.activeIcon : item.icon}
       </span>
       <span className={cn(
-        'relative z-10 text-[10px] font-medium tracking-wide transition-all duration-200',
+        'relative z-10 text-[10px] font-medium tracking-wide transition-colors duration-50 pointer-events-none',
         isActive && 'font-semibold'
       )}>
         {item.label}
@@ -144,26 +144,32 @@ export function BottomNav({ activeTab, analyticsSubTab, onTabChange }: BottomNav
     }
   }, [autoOpenTransaction, hasAutoOpened, setHasAutoOpened]);
 
+  const getIsActive = useCallback((itemId: TabType) => {
+    if (itemId === 'wallets') return activeTab === 'analytics' && analyticsSubTab === 'wallets';
+    if (itemId === 'analytics') return activeTab === 'analytics' && analyticsSubTab === 'stats';
+    return activeTab === itemId;
+  }, [activeTab, analyticsSubTab]);
+
+  const handleNavClick = useCallback((itemId: TabType) => {
+    if (!getIsActive(itemId)) {
+      onTabChange(itemId);
+    }
+  }, [getIsActive, onTabChange]);
+
   const leftItems = navItems.slice(0, 2);
   const rightItems = navItems.slice(2, 4);
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border/50 pb-safe">
-      <div className="mx-auto flex max-w-lg items-center justify-between px-2 ">
+      <div className="mx-auto flex max-w-lg items-center justify-between px-2">
         {/* Left nav items */}
         <div className="flex items-center justify-around flex-1">
           {leftItems.map((item) => (
             <NavButton
               key={item.id}
               item={item}
-              isActive={
-                item.id === 'wallets'
-                  ? activeTab === 'analytics' && analyticsSubTab === 'wallets'
-                  : item.id === 'analytics'
-                    ? activeTab === 'analytics' && analyticsSubTab === 'stats'
-                    : activeTab === item.id
-              }
-              onClick={() => onTabChange(item.id)}
+              isActive={getIsActive(item.id)}
+              onClick={() => handleNavClick(item.id)}
             />
           ))}
         </div>
@@ -175,7 +181,7 @@ export function BottomNav({ activeTab, analyticsSubTab, onTabChange }: BottomNav
               <Button
                 size="lg"
                 className="relative -top-3 size-16 rounded-full shadow-lg shadow-primary/25
-                  hover:scale-110 active:scale-95 transition-transform duration-200
+                  hover:scale-110 active:scale-95 transition-transform duration-50
                   bg-primary hover:bg-primary/90"
               >
                 <Plus className="size-10" />
@@ -195,14 +201,8 @@ export function BottomNav({ activeTab, analyticsSubTab, onTabChange }: BottomNav
             <NavButton
               key={item.id}
               item={item}
-              isActive={
-                item.id === 'wallets'
-                  ? activeTab === 'analytics' && analyticsSubTab === 'wallets'
-                  : item.id === 'analytics'
-                    ? activeTab === 'analytics' && analyticsSubTab === 'stats'
-                    : activeTab === item.id
-              }
-              onClick={() => onTabChange(item.id)}
+              isActive={getIsActive(item.id)}
+              onClick={() => handleNavClick(item.id)}
             />
           ))}
         </div>
