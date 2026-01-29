@@ -309,7 +309,7 @@ function TransactionItem({
           </p>
         </div>
       </button>
-   
+
     </div>
   );
 }
@@ -514,7 +514,6 @@ function WalletDetailSkeleton() {
         {/* Wallet Summary Card Skeleton */}
         <div className="relative overflow-hidden rounded-2xl mb-4 bg-muted/30 border border-border/30">
           <div className="p-5 space-y-4">
-            {/* Icon and Name */}
             <div className="flex items-center gap-4">
               <div className="size-16 rounded-xl bg-muted animate-pulse" />
               <div className="space-y-2">
@@ -524,13 +523,11 @@ function WalletDetailSkeleton() {
               <div className="size-9 rounded-lg bg-muted animate-pulse ml-auto" />
             </div>
 
-            {/* Balance Skeleton */}
             <div className="space-y-2">
               <div className="h-4 w-16 rounded-md bg-muted animate-pulse" />
               <div className="h-8 w-40 rounded-md bg-muted animate-pulse" />
             </div>
 
-            {/* Stats Skeleton */}
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-xl bg-muted/50 p-3 space-y-2">
                 <div className="h-4 w-16 rounded-md bg-muted animate-pulse" />
@@ -544,7 +541,6 @@ function WalletDetailSkeleton() {
           </div>
         </div>
 
-        {/* Section Header Skeleton */}
         <div className="flex items-center justify-between mb-3">
           <div className="h-5 w-32 rounded-md bg-muted animate-pulse" />
           <div className="flex gap-2">
@@ -553,10 +549,8 @@ function WalletDetailSkeleton() {
           </div>
         </div>
 
-        {/* Search Skeleton */}
         <div className="h-10 w-full rounded-xl bg-muted animate-pulse mb-3" />
 
-        {/* Transaction Items Skeleton */}
         <div className="space-y-2">
           {[1, 2, 3, 4, 5].map((i) => (
             <div
@@ -601,7 +595,6 @@ function WalletDetailView({
 
   const typeConfig = getWalletTypeConfig(wallet.type);
 
-  // Loading effect when entering wallet detail
   useEffect(() => {
     setIsLoading(true);
     const timer = setTimeout(() => {
@@ -646,7 +639,6 @@ function WalletDetailView({
     setDeleteTarget(null);
   };
 
-  // Show loading skeleton
   if (isLoading) {
     return <WalletDetailSkeleton />;
   }
@@ -922,9 +914,9 @@ function WalletDetailView({
 }
 
 // ============================================
-// Main WalletsTab Component
+// Main WalletsContent Component
 // ============================================
-export function WalletsTab() {
+export function WalletsContent() {
   // Stores
   const wallets = useWalletStore((s) => s.wallets);
   const loadWallets = useWalletStore((s) => s.loadWallets);
@@ -1005,16 +997,10 @@ export function WalletsTab() {
   const handleDeleteWallet = async () => {
     if (!walletToDelete) return;
 
-    // Bulk delete all transactions for this wallet from DB
     await deleteTransactionsByWalletId(walletToDelete.id);
-
-    // Delete all analysis records for this wallet
     await deleteAnalysisByWalletId(walletToDelete.id);
-
-    // Delete the wallet from DB
     await deleteWallet(walletToDelete.id);
 
-    // Reset state
     setSelectedWallet(null);
     setWalletToDelete(null);
     setShowDeleteWalletConfirm(false);
@@ -1022,25 +1008,16 @@ export function WalletsTab() {
 
   const handleDeleteAllTransactions = async () => {
     if (!selectedWallet) return;
-
-    // Bulk delete all transactions for this wallet from DB
     await deleteTransactionsByWalletId(selectedWallet.id);
   };
 
-  // Handler to delete wallet directly (called from WalletDetailView's own dialog)
   const handleDeleteWalletDirect = async () => {
     if (!selectedWallet) return;
 
-    // Bulk delete all transactions for this wallet from DB
     await deleteTransactionsByWalletId(selectedWallet.id);
-
-    // Delete all analysis records for this wallet
     await deleteAnalysisByWalletId(selectedWallet.id);
-
-    // Delete the wallet from DB
     await deleteWallet(selectedWallet.id);
 
-    // Reset state
     setSelectedWallet(null);
   };
 
@@ -1074,20 +1051,6 @@ export function WalletsTab() {
   // Render Wallets List
   return (
     <>
-      <Header
-        title="กระเป๋าเงิน"
-        rightAction={
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={handleAddWallet}
-            className="rounded-full"
-          >
-            <Plus className="size-5" />
-          </Button>
-        }
-      />
-
       <PageContainer className="pt-4">
         {/* Total Balance Card */}
         <div className="relative overflow-hidden rounded-2xl mb-6 bg-linear-to-br from-primary/20 via-primary/10 to-transparent border border-primary/20 shadow-soft">

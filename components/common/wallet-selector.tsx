@@ -102,8 +102,8 @@ export function WalletSelector({
             <rect x="15" y="3" width="4" height="15" rx="1" fill="currentColor" opacity="0.7" />
           </svg>}
         </span>
-        <span className="max-w-[250px] truncate text-sm">
-          {selectedWallet ? selectedWallet.name : 'ทั้งหมด'}
+        <span className="max-w-[250px] truncate text-sm font-semibold">
+          {selectedWallet ? selectedWallet.name : 'เลือกบัญชี'}
         </span>
         <ChevronDown
           className={cn(

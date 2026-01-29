@@ -6,7 +6,7 @@ import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AddTransactionSheet } from '@/components/transactions';
 import { useTransactionStore, useCategoryStore, useSettingsStore } from '@/lib/stores';
-import { TabType } from '@/hooks/useTabNavigation';
+import { TabType, AnalyticsSubTab } from '@/hooks/useTabNavigation';
 
 interface NavItem {
   id: TabType;
@@ -31,20 +31,6 @@ const navItems: NavItem[] = [
     label: 'จด',
   },
   {
-    id: 'wallets',
-    icon: (
-      <svg className="size-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a2.25 2.25 0 0 0-2.25-2.25H15a3 3 0 1 1-6 0H5.25A2.25 2.25 0 0 0 3 12m18 0v6a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 9m18 0V6a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 6v3" />
-      </svg>
-    ),
-    activeIcon: (
-      <svg className="size-6" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M2.273 5.625A4.483 4.483 0 0 1 5.25 4.5h13.5c1.141 0 2.183.425 2.977 1.125A3 3 0 0 0 18.75 3H5.25a3 3 0 0 0-2.977 2.625ZM2.273 8.625A4.483 4.483 0 0 1 5.25 7.5h13.5c1.141 0 2.183.425 2.977 1.125A3 3 0 0 0 18.75 6H5.25a3 3 0 0 0-2.977 2.625ZM5.25 9a3 3 0 0 0-3 3v6a3 3 0 0 0 3 3h13.5a3 3 0 0 0 3-3v-6a3 3 0 0 0-3-3H15a.75.75 0 0 0-.75.75 2.25 2.25 0 0 1-4.5 0A.75.75 0 0 0 9 9H5.25Z" />
-      </svg>
-    ),
-    label: 'กระเป๋า',
-  },
-  {
     id: 'analytics',
     icon: (
       <svg className="size-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -59,6 +45,20 @@ const navItems: NavItem[] = [
       </svg>
     ),
     label: 'วิเคราะห์',
+  },
+  {
+    id: 'ai-analysis',
+    icon: (
+      <svg className="size-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 0 0-2.455 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" />
+      </svg>
+    ),
+    activeIcon: (
+      <svg className="size-6" fill="currentColor" viewBox="0 0 24 24">
+        <path fillRule="evenodd" d="M9 4.5a.75.75 0 0 1 .721.544l.813 2.846a3.75 3.75 0 0 0 2.576 2.576l2.846.813a.75.75 0 0 1 0 1.442l-2.846.813a3.75 3.75 0 0 0-2.576 2.576l-.813 2.846a.75.75 0 0 1-1.442 0l-.813-2.846a3.75 3.75 0 0 0-2.576-2.576l-2.846-.813a.75.75 0 0 1 0-1.442l2.846-.813A3.75 3.75 0 0 0 7.466 7.89l.813-2.846A.75.75 0 0 1 9 4.5ZM18 1.5a.75.75 0 0 1 .728.568l.258 1.036c.236.94.97 1.674 1.91 1.91l1.036.258a.75.75 0 0 1 0 1.456l-1.036.258c-.94.236-1.674.97-1.91 1.91l-.258 1.036a.75.75 0 0 1-1.456 0l-.258-1.036a2.625 2.625 0 0 0-1.91-1.91l-1.036-.258a.75.75 0 0 1 0-1.456l1.036-.258a2.625 2.625 0 0 0 1.91-1.91l.258-1.036A.75.75 0 0 1 18 1.5ZM16.5 15a.75.75 0 0 1 .712.513l.394 1.183c.15.447.5.799.948.948l1.183.394a.75.75 0 0 1 0 1.424l-1.183.394c-.447.15-.799.5-.948.948l-.394 1.183a.75.75 0 0 1-1.424 0l-.394-1.183a1.5 1.5 0 0 0-.948-.948l-1.183-.394a.75.75 0 0 1 0-1.424l1.183-.394a1.5 1.5 0 0 0 .948-.948l.394-1.183A.75.75 0 0 1 16.5 15Z" clipRule="evenodd" />
+      </svg>
+    ),
+    label: 'AI',
   },
   {
     id: 'more',
@@ -115,10 +115,11 @@ function NavButton({ item, isActive, onClick }: NavButtonProps) {
 
 interface BottomNavProps {
   activeTab: TabType;
+  analyticsSubTab?: AnalyticsSubTab;
   onTabChange: (tab: TabType) => void;
 }
 
-export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
+export function BottomNav({ activeTab, analyticsSubTab, onTabChange }: BottomNavProps) {
   const addTransaction = useTransactionStore((s) => s.addTransaction);
   const expenseCategories = useCategoryStore((s) => s.expenseCategories);
   const incomeCategories = useCategoryStore((s) => s.incomeCategories);
@@ -155,7 +156,13 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
             <NavButton
               key={item.id}
               item={item}
-              isActive={activeTab === item.id}
+              isActive={
+                item.id === 'wallets'
+                  ? activeTab === 'analytics' && analyticsSubTab === 'wallets'
+                  : item.id === 'analytics'
+                    ? activeTab === 'analytics' && analyticsSubTab === 'stats'
+                    : activeTab === item.id
+              }
               onClick={() => onTabChange(item.id)}
             />
           ))}
@@ -188,7 +195,13 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
             <NavButton
               key={item.id}
               item={item}
-              isActive={activeTab === item.id}
+              isActive={
+                item.id === 'wallets'
+                  ? activeTab === 'analytics' && analyticsSubTab === 'wallets'
+                  : item.id === 'analytics'
+                    ? activeTab === 'analytics' && analyticsSubTab === 'stats'
+                    : activeTab === item.id
+              }
               onClick={() => onTabChange(item.id)}
             />
           ))}

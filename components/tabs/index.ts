@@ -1,4 +1,4 @@
 export { HomeTab } from './HomeTab';
 export { AnalyticsTab } from './AnalyticsTab';
-export { WalletsTab } from './WalletsTab';
+export { UseAiAnalysisTab } from './UseAiAnalysisTab';
 export { MoreTab } from './MoreTab';
