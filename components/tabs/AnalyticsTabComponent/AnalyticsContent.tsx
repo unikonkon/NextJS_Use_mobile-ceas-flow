@@ -1194,6 +1194,111 @@ function CategoryList({
 }
 
 // ============================================
+// Daily Average Summary
+// ============================================
+function DailyAverageSummary({
+  filterMode,
+  selectedMonths,
+  selectedYear,
+  chartViewMode,
+  totalExpense,
+  totalIncome,
+  totalAll,
+}: {
+  filterMode: FilterMode;
+  selectedMonths: MonthSelection[];
+  selectedYear: number;
+  chartViewMode: ChartViewMode;
+  totalExpense: number;
+  totalIncome: number;
+  totalAll: number;
+}) {
+  const totalDays = useMemo(() => {
+    if (filterMode === 'yearly') {
+      let days = 0;
+      for (let m = 0; m < 12; m++) {
+        days += getDaysInMonth(selectedYear, m);
+      }
+      return days;
+    }
+    return selectedMonths.reduce((sum, s) => sum + getDaysInMonth(s.year, s.month), 0);
+  }, [filterMode, selectedMonths, selectedYear]);
+
+  const items = useMemo(() => {
+    if (chartViewMode === 'all') {
+      return [
+        {
+          label: 'รายจ่าย/วัน',
+          total: totalExpense,
+          avg: totalDays > 0 ? Math.round(totalExpense / totalDays) : 0,
+          color: 'text-rose-500',
+          bgColor: 'bg-rose-500/10',
+          icon: <TrendingDown className="size-3.5" />,
+        },
+        {
+          label: 'รายรับ/วัน',
+          total: totalIncome,
+          avg: totalDays > 0 ? Math.round(totalIncome / totalDays) : 0,
+          color: 'text-emerald-500',
+          bgColor: 'bg-emerald-500/10',
+          icon: <TrendingUp className="size-3.5" />,
+        },
+        // {
+        //   label: 'รวม/วัน',
+        //   total: totalAll,
+        //   avg: totalDays > 0 ? Math.round(totalAll / totalDays) : 0,
+        //   color: 'text-blue-500',
+        //   bgColor: 'bg-blue-500/10',
+        //   icon: <Layers className="size-3.5" />,
+        // },
+      ];
+    }
+
+    const isExpense = chartViewMode === 'expense';
+    const total = isExpense ? totalExpense : totalIncome;
+    return [
+      {
+        label: isExpense ? 'รายจ่าย/วัน' : 'รายรับ/วัน',
+        total,
+        avg: totalDays > 0 ? Math.round(total / totalDays) : 0,
+        color: isExpense ? 'text-rose-500' : 'text-emerald-500',
+        bgColor: isExpense ? 'bg-rose-500/10' : 'bg-emerald-500/10',
+        icon: isExpense ? <TrendingDown className="size-3.5" /> : <TrendingUp className="size-3.5" />,
+      },
+    ];
+  }, [chartViewMode, totalExpense, totalIncome, totalAll, totalDays]);
+
+  return (
+    <div className="flex gap-2 mb-3">
+      {items.map((item) => (
+        <div
+          key={item.label}
+          className={cn(
+            'flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl border border-border/40',
+            'bg-card'
+          )}
+        >
+          <div className={cn('size-8 rounded-lg flex items-center justify-center shrink-0', item.bgColor, item.color)}>
+            {item.icon}
+          </div>
+          <div className={cn("min-w-0", chartViewMode === 'all' ? '' : 'flex justify-between w-full')}>
+            <p className="text-[12px] font-semibold text-muted-foreground truncate">{item.label}</p>
+            <p className={cn('text-sm font-bold', item.color)}>
+              ฿{item.avg.toLocaleString()}
+            </p>
+          </div>
+        </div>
+      ))}
+      <div className="flex items-center px-2">
+        <span className="text-[14px] font-semibold text-muted-foreground whitespace-nowrap">
+          {totalDays} วัน
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ============================================
 // Main AnalyticsContent Component
 // ============================================
 export function AnalyticsContent() {
@@ -1645,6 +1750,8 @@ export function AnalyticsContent() {
                 )}
               </div>
             </div>
+
+
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setIsReusedSheetOpen(true)}
@@ -1660,6 +1767,15 @@ export function AnalyticsContent() {
               </button>
             </div>
           </div>
+          <DailyAverageSummary
+            filterMode={filterMode}
+            selectedMonths={selectedMonths}
+            selectedYear={selectedYear}
+            chartViewMode={chartViewMode}
+            totalExpense={totalExpense}
+            totalIncome={totalIncome}
+            totalAll={totalAll}
+          />
           <CategoryList
             summaries={currentSummaries}
             transactions={filteredTransactions}

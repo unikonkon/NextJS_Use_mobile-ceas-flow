@@ -3,7 +3,7 @@
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { TransactionWithCategory } from '@/types';
-import { formatCurrency } from '@/lib/utils/format';
+import { formatCurrency, formatTime } from '@/lib/utils/format';
 import { ChevronDown, Layers } from 'lucide-react';
 
 interface GroupedTransactionCardProps {
@@ -62,7 +62,7 @@ export function GroupedTransactionCard({
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className={cn(
-          'flex w-full items-center gap-3 px-3 py-2 text-left',
+          'flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-left',
           'transition-all duration-200',
           'hover:bg-accent/30 active:scale-[0.995] bg-card'
         )}
@@ -75,10 +75,14 @@ export function GroupedTransactionCard({
               'transition-all duration-300',
               'shadow-sm',
               isExpense && 'bg-expense/15 text-expense',
-              isIncome && 'bg-income/15 text-income'
+              isIncome && 'bg-income/15 text-income',
             )}
           >
-            {category.icon || category.name.charAt(0)}
+            {category.icon ? (
+              <span className="opacity-75">{category.icon}</span>
+            ) : (
+              <span>{category.name.charAt(0)}</span>
+            )}
           </div>
 
           {/* Stack Count Badge */}
@@ -101,6 +105,9 @@ export function GroupedTransactionCard({
         <div className="flex flex-1 flex-col gap-0.5 overflow-hidden">
           <div className="flex items-center gap-2">
             <span className="truncate font-semibold text-foreground">
+              <span className="mr-1.5 text-xs font-normal text-muted-foreground">
+                {formatTime(sortedTransactions[0].date)}
+              </span>
               {category.name}
             </span>
             <div

@@ -2,7 +2,7 @@
 
 import { cn } from '@/lib/utils';
 import { TransactionWithCategory } from '@/types';
-import { formatCurrency } from '@/lib/utils/format';
+import { formatCurrency, formatTime } from '@/lib/utils/format';
 
 interface TransactionCardProps {
   transaction: TransactionWithCategory;
@@ -28,7 +28,7 @@ export function TransactionCard({
     <button
       onClick={onClick}
       className={cn(
-        'group flex w-full items-center gap-3 rounded-2xl p-3 text-left transition-all duration-200',
+        'group flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-left transition-all duration-200',
         'border-b border-border/50 bg-card',
         'hover:bg-accent/50 active:scale-[0.98]',
         isNew && 'animate-pop-in-glow transaction-new bg-accent/30',
@@ -39,16 +39,23 @@ export function TransactionCard({
       <div
         className={cn(
           'flex size-10 items-center justify-center rounded-xl bg-muted/60 text-3xl font-medium',
-          isExpense && 'bg-expense/10 text-expense',
-          isIncome && 'bg-income/10 text-income'
+          isExpense && 'bg-expense/15 text-expense',
+          isIncome && 'bg-income/15 text-income'
         )}
       >
-        {transaction.category.icon || transaction.category.name.charAt(0)}
+        {transaction.category.icon ? (
+          <span className="opacity-75">{transaction.category.icon}</span>
+        ) : (
+          <span>{transaction.category.name.charAt(0)}</span>
+        )}
       </div>
 
       {/* Content */}
       <div className="flex flex-1 flex-col gap-0.5 overflow-hidden">
-        <span className="truncate font-medium text-foreground">
+        <span className="truncate font-semibold text-foreground">
+          <span className="mr-1.5 text-xs font-normal text-muted-foreground">
+            {formatTime(transaction.date)}
+          </span>
           {transaction.category.name}
         </span>
 
