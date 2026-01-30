@@ -1,12 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Header, PageContainer } from '@/components/layout';
 import { SummaryBar, TransactionList, EditTransactionSheet } from '@/components/transactions';
 import { MonthPicker, WalletSelector } from '@/components/common';
-import { Button } from '@/components/ui/button';
-import { Calendar } from 'lucide-react';
-import { useTransactionStore, useCategoryStore, useWalletStore } from '@/lib/stores';
+import { AlertBanner } from '@/components/ui/alert-banner';
+import { useTransactionStore, useCategoryStore, useWalletStore, useAlertSettingsStore } from '@/lib/stores';
 import { TransactionWithCategory } from '@/types';
 
 export function HomeTab() {
@@ -40,6 +39,12 @@ export function HomeTab() {
   const expenseCategories = useCategoryStore((s) => s.expenseCategories);
   const incomeCategories = useCategoryStore((s) => s.incomeCategories);
 
+  // Alert settings store
+  const isMonthlyTargetEnabled = useAlertSettingsStore((s) => s.isMonthlyTargetEnabled);
+  const monthlyExpenseTarget = useAlertSettingsStore((s) => s.monthlyExpenseTarget);
+  const isCategoryLimitsEnabled = useAlertSettingsStore((s) => s.isCategoryLimitsEnabled);
+  const categoryLimits = useAlertSettingsStore((s) => s.categoryLimits);
+
   // Load wallets on mount
   useEffect(() => {
     if (!walletInitialized) {
@@ -56,6 +61,67 @@ export function HomeTab() {
   const currentWalletBalance = selectedWalletId
     ? walletBalances[selectedWalletId]?.balance || 0
     : Object.values(walletBalances).reduce((sum, wb) => sum + wb.balance, 0);
+
+  // Compute alert messages
+  const alerts = useMemo(() => {
+    const result: { variant: 'warning' | 'danger'; title: string; description?: string }[] = [];
+
+    // Monthly expense target alert
+    if (isMonthlyTargetEnabled && monthlyExpenseTarget !== null && monthlyExpenseTarget > 0) {
+      const expense = monthlySummary.expense;
+      const ratio = expense / monthlyExpenseTarget;
+      if (ratio >= 1) {
+        result.push({
+          variant: 'danger',
+          title: `รายจ่ายเกินเป้าหมาย!`,
+          description: `${expense.toLocaleString('th-TH')} / ${monthlyExpenseTarget.toLocaleString('th-TH')} บาท (${Math.round(ratio * 100)}%)`,
+        });
+      } else if (ratio >= 0.9) {
+        result.push({
+          variant: 'warning',
+          title: `รายจ่ายใกล้ถึงเป้าหมาย`,
+          description: `${expense.toLocaleString('th-TH')} / ${monthlyExpenseTarget.toLocaleString('th-TH')} บาท (${Math.round(ratio * 100)}%)`,
+        });
+      }
+    }
+
+    // Category limits alerts
+    if (isCategoryLimitsEnabled && categoryLimits.length > 0) {
+      // Flatten all transactions from daily summaries for category grouping
+      const allTransactions = dailySummaries.flatMap((ds) => ds.transactions);
+
+      for (const cl of categoryLimits) {
+        const categoryExpense = allTransactions
+          .filter((t) => t.type === 'expense' && t.categoryId === cl.categoryId)
+          .reduce((sum, t) => sum + t.amount, 0);
+
+        if (categoryExpense <= 0) continue;
+
+        const cat = expenseCategories.find((c) => c.id === cl.categoryId);
+        const catName = cat ? `${cat.icon || ''} ${cat.name}` : 'หมวดหมู่';
+        const ratio = categoryExpense / cl.limit;
+
+        if (ratio >= 1) {
+          result.push({
+            variant: 'danger',
+            title: `${catName} เกินลิมิต!`,
+            description: `${categoryExpense.toLocaleString('th-TH')} / ${cl.limit.toLocaleString('th-TH')} บาท (${Math.round(ratio * 100)}%)`,
+          });
+        } else if (ratio >= 0.9) {
+          result.push({
+            variant: 'warning',
+            title: `${catName} ใกล้ถึงลิมิต`,
+            description: `${categoryExpense.toLocaleString('th-TH')} / ${cl.limit.toLocaleString('th-TH')} บาท (${Math.round(ratio * 100)}%)`,
+          });
+        }
+      }
+    }
+
+    return result;
+  }, [
+    isMonthlyTargetEnabled, monthlyExpenseTarget, monthlySummary.expense,
+    isCategoryLimitsEnabled, categoryLimits, dailySummaries, expenseCategories,
+  ]);
 
   const handleTransactionClick = (id: string) => {
     const transaction = getTransactionById(id);
@@ -109,8 +175,22 @@ export function HomeTab() {
           expense={monthlySummary.expense}
           wallet={selectedWallet}
           walletBalance={currentWalletBalance}
-          className="mb-3"
+          className="mb-2"
         />
+
+        {/* Expense Alert Banners */}
+        {alerts.length > 0 && (
+          <div className="mb-3 space-y-2">
+            {alerts.map((alert, i) => (
+              <AlertBanner
+                key={i}
+                variant={alert.variant}
+                title={alert.title}
+                description={alert.description}
+              />
+            ))}
+          </div>
+        )}
 
         {/* Transaction List */}
         <TransactionList
@@ -153,7 +233,7 @@ export function HomeTab() {
             strokeWidth={2}
             viewBox="0 0 24 24"
           >
-            <circle cx="12" cy="12" r="10" stroke="currentColor" className="opacity-70"/>
+            <circle cx="12" cy="12" r="10" stroke="currentColor" className="opacity-70" />
             <path strokeLinecap="round" strokeLinejoin="round" d="M7 13l3 3 5-5" />
           </svg>
           <span className="font-medium">บันทึกสำเร็จ!</span>

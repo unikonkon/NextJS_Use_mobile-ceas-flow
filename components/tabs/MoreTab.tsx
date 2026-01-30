@@ -3,10 +3,10 @@
 import { useState } from 'react';
 import { Header, PageContainer } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
-import { User, Palette, ChevronRight, Check, Database, FileSpreadsheet, PlusCircle } from 'lucide-react';
+import { User, Palette, ChevronRight, Check, Database, FileSpreadsheet, PlusCircle, Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useThemeStore, type ThemeType } from '@/lib/stores/theme-store';
-import { StorageInfoCard, ExportDataCard, AutoOpenSettingCard } from './MoreTabComponent';
+import { StorageInfoCard, ExportDataCard, AutoOpenSettingCard, SettingAlertPriceCard } from './MoreTabComponent';
 
 interface SettingsMenuItemProps {
   icon: React.ReactNode;
@@ -141,7 +141,7 @@ export function MoreTab() {
   const [showStorageInfo, setShowStorageInfo] = useState(false);
   const [showExportData, setShowExportData] = useState(false);
   const [showAutoOpenSetting, setShowAutoOpenSetting] = useState(false);
-
+  const [showAlert, setShowAlert] = useState(false);
   const handleAccountClick = () => {
     // TODO: Navigate to account settings
     console.log('Account settings clicked');
@@ -161,6 +161,10 @@ export function MoreTab() {
 
   const handleAutoOpenClick = () => {
     setShowAutoOpenSetting(!showAutoOpenSetting);
+  };
+
+  const handleAlertClick = () => {
+    setShowAlert(!showAlert);
   };
 
   return (
@@ -237,6 +241,23 @@ export function MoreTab() {
             <StorageInfoCard />
           </div>
         )}
+
+
+        <div className="flex flex-col pt-3">
+          <SettingsMenuItem
+            icon={<Bell className="size-5" />}
+            title="แจ้งเตือนรายจ่าย"
+            onClick={handleAlertClick}
+          />
+        </div>
+
+        {/* Alert Card */}
+        {showAlert && (
+          <div className="animate-slide-up mt-1">
+            <SettingAlertPriceCard />
+          </div>
+        )}
+
       </PageContainer>
     </>
   );
