@@ -8,5 +8,6 @@ export { useAnalysisStore } from './analysis-store';
 export { useSettingsStore } from './settings-store';
 export { useAlertSettingsStore } from './alert-settings-store';
 export type { CategoryLimit } from './alert-settings-store';
+export { useAiHistoryStore } from './ai-history-store';
 export { db } from './db';
-export type { Analysis, MatchType } from './db';
+export type { Analysis, MatchType, AiHistory, AiPromptType } from './db';

@@ -42,6 +42,21 @@ export interface StoredWallet {
 }
 
 // ============================================
+// AI History Types (NEW in V5)
+// ============================================
+export type AiPromptType = 'compact' | 'structured' | 'full';
+
+export interface StoredAiHistory {
+  id: string;
+  walletId: string | null;
+  promptType: AiPromptType;
+  year: number;
+  responseType: 'structured' | 'text';
+  responseData: string; // JSON stringified
+  createdAt: string; // ISO string
+}
+
+// ============================================
 // Analysis Types (NEW in V4)
 // ============================================
 export type MatchType = 'basic' | 'full';
@@ -68,6 +83,7 @@ export class AppDatabase extends Dexie {
   categories!: EntityTable<StoredCategory, 'id'>;
   wallets!: EntityTable<StoredWallet, 'id'>;
   analysis!: EntityTable<StoredAnalysis, 'id'>;
+  aiHistory!: EntityTable<StoredAiHistory, 'id'>;
 
   constructor() {
     super('CeasFlowDB');
@@ -98,6 +114,15 @@ export class AppDatabase extends Dexie {
       categories: 'id, type, order',
       wallets: 'id, type',
       analysis: 'id, walletId, type, categoryId, amount, note, matchType, count, lastTransactionId, updatedAt',
+    });
+
+    // Version 5: Add aiHistory table for AI analysis results
+    this.version(5).stores({
+      transactions: 'id, walletId, categoryId, type, date, createdAt',
+      categories: 'id, type, order',
+      wallets: 'id, type',
+      analysis: 'id, walletId, type, categoryId, amount, note, matchType, count, lastTransactionId, updatedAt',
+      aiHistory: 'id, walletId, promptType, year, createdAt',
     });
   }
 }
@@ -191,5 +216,32 @@ export function fromStoredAnalysis(s: StoredAnalysis): Analysis {
     ...s,
     createdAt: new Date(s.createdAt),
     updatedAt: new Date(s.updatedAt),
+  };
+}
+
+// ============================================
+// AI History Converters (NEW in V5)
+// ============================================
+export interface AiHistory {
+  id: string;
+  walletId: string | null;
+  promptType: AiPromptType;
+  year: number;
+  responseType: 'structured' | 'text';
+  responseData: string; // JSON stringified
+  createdAt: Date;
+}
+
+export function toStoredAiHistory(a: AiHistory): StoredAiHistory {
+  return {
+    ...a,
+    createdAt: a.createdAt.toISOString(),
+  };
+}
+
+export function fromStoredAiHistory(s: StoredAiHistory): AiHistory {
+  return {
+    ...s,
+    createdAt: new Date(s.createdAt),
   };
 }
