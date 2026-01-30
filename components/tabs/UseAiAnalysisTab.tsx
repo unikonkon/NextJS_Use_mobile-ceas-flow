@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Header, PageContainer } from '@/components/layout';
+import { WalletSelector } from '@/components/common/wallet-selector';
 import { useTransactionStore, useWalletStore } from '@/lib/stores';
 import { useAiHistoryStore } from '@/lib/stores/ai-history-store';
 import type { Wallet } from '@/types';
@@ -69,6 +70,7 @@ export function UseAiAnalysisTab() {
 
   // Stores
   const transactions = useTransactionStore((s) => s.transactions);
+  const walletBalances = useTransactionStore((s) => s.walletBalances);
   const wallets = useWalletStore((s) => s.wallets);
   const loadWallets = useWalletStore((s) => s.loadWallets);
   const walletInitialized = useWalletStore((s) => s.isInitialized);
@@ -242,67 +244,47 @@ export function UseAiAnalysisTab() {
   if (showHistory) {
     return (
       <>
-        <PageContainer className="pt-4 pb-8">
-          <AiHistoryView onBack={() => setShowHistory(false)} wallets={wallets} />
-        </PageContainer>
+        <AiHistoryView onBack={() => setShowHistory(false)} wallets={wallets} />
       </>
     );
   }
 
   return (
     <>
+      <Header
+        leftAction={
+          <WalletSelector
+            wallets={wallets}
+            selectedWalletId={selectedWalletId}
+            walletBalances={walletBalances}
+            onSelect={setSelectedWalletId}
+          />
+
+        }
+        rightAction={
+          <>
+            {/* Year Selector */}
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => setSelectedYear((y) => y - 1)}
+                disabled={!availableYears.includes(selectedYear - 1) && selectedYear <= Math.min(...availableYears)}
+                className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted transition-colors disabled:opacity-30"
+              >
+                <ChevronLeft className="size-8" />
+              </button>
+              <span className="text-md font-semibold">{selectedYear + 543}</span>
+              <button
+                onClick={() => setSelectedYear((y) => y + 1)}
+                disabled={selectedYear >= new Date().getFullYear()}
+                className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted transition-colors disabled:opacity-30"
+              >
+                <ChevronRight className="size-8" />
+              </button>
+            </div>
+          </>
+        }
+      />
       <PageContainer className="pt-2 pb-8">
-
-
-        {/* Wallet Selector */}
-        <div className="pb-2 mt-2 flex gap-2 overflow-x-auto scrollbar-none">
-          <button
-            onClick={() => setSelectedWalletId(null)}
-            className={cn(
-              'shrink-0 rounded-full px-3 py-1.5 text-sm font-medium transition-colors',
-              !selectedWalletId
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-muted text-muted-foreground'
-            )}
-          >
-            ทุกกระเป๋า
-          </button>
-          {wallets.map((w) => (
-            <button
-              key={w.id}
-              onClick={() => setSelectedWalletId(w.id)}
-              className={cn(
-                'shrink-0 rounded-full px-3 py-1.5 text-sm font-medium transition-colors flex items-center gap-1',
-                selectedWalletId === w.id
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted text-muted-foreground'
-              )}
-            >
-              <span>{w.icon}</span>
-              {w.name}
-            </button>
-          ))}
-        </div>
-
-        {/* Year Selector */}
-        <div className="mb-4 flex items-center justify-between">
-          <button
-            onClick={() => setSelectedYear((y) => y - 1)}
-            disabled={!availableYears.includes(selectedYear - 1) && selectedYear <= Math.min(...availableYears)}
-            className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted transition-colors disabled:opacity-30"
-          >
-            <ChevronLeft className="size-5" />
-          </button>
-          <span className="text-sm font-semibold">{selectedYear + 543}</span>
-          <button
-            onClick={() => setSelectedYear((y) => y + 1)}
-            disabled={selectedYear >= new Date().getFullYear()}
-            className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted transition-colors disabled:opacity-30"
-          >
-            <ChevronRight className="size-5" />
-          </button>
-        </div>
-
         {filtered.length === 0 ? (
           <div className="py-16 text-center text-sm text-muted-foreground">
             ไม่มีข้อมูลในปีนี้
@@ -334,8 +316,8 @@ export function UseAiAnalysisTab() {
             <div className="mb-3">
               <div className="flex items-center justify-between py-2">
                 <div className="flex flex-col items-center gap-2">
-                <p className="text-xs font-medium text-muted-foreground">เลือกรูปแบบการวิเคราะห์</p>
-                 <span className="text-sm font-semibold bg-primary/10 text-primary px-2 py-1 rounded-full">{selectedWallet ? selectedWallet.name : 'ทุกกระเป๋า'} ปี {selectedYear + 543}</span>
+                  <p className="text-xs font-medium text-muted-foreground">เลือกรูปแบบการวิเคราะห์</p>
+                  <span className="text-sm font-semibold bg-primary/10 text-primary px-2 py-1 rounded-full">{selectedWallet ? selectedWallet.name : 'ทุกกระเป๋า'} ปี {selectedYear + 543}</span>
                 </div>
                 {/* History Button */}
                 <div className="flex justify-end">
@@ -735,102 +717,109 @@ function AiHistoryView({ onBack, wallets }: { onBack: () => void; wallets: Walle
 
   return (
     <div>
-      {/* Header */}
-      <div className="mb-4 flex items-center justify-between">
-        <button
-          onClick={onBack}
-          className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ArrowLeft className="size-4" />
-          กลับ
-        </button>
-        {records.length > 0 && (
-          <button
-            onClick={clearHistory}
-            className="flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-medium text-expense hover:bg-expense/10 transition-colors bg-card shadow-xs"
-          >
-            <Trash2 className="size-3" />
-            ลบทั้งหมด
-          </button>
-        )}
-      </div>
+      <Header
+        title="ประวัติการวิเคราะห์ AI"
+        leftAction={
+          <>
+            <button
+              onClick={onBack}
+              className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ArrowLeft className="size-4" />
+              กลับ
+            </button>
+          </>
+        }
+        rightAction={
+          <>
+            {records.length > 0 && (
+              <button
+                onClick={clearHistory}
+                className="flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-medium text-expense hover:bg-expense/10 transition-colors bg-card shadow-xs"
+              >
+                <Trash2 className="size-3" />
+                ลบทั้งหมด
+              </button>
+            )}
+          </>
+        }
+      />
+      <PageContainer className="pt-4 pb-8">
+        {records.length === 0 ? (
+          <div className="py-16 text-center text-sm text-muted-foreground">
+            ยังไม่มีประวัติการวิเคราะห์
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {records.map((record) => {
+              const isExpanded = expandedId === record.id;
+              let parsedData: StructuredResult | string | null = null;
+              try {
+                parsedData = JSON.parse(record.responseData);
+              } catch {
+                parsedData = record.responseData;
+              }
 
-      <p className="mb-3 text-sm font-semibold">ประวัติการวิเคราะห์ AI</p>
-
-      {records.length === 0 ? (
-        <div className="py-16 text-center text-sm text-muted-foreground">
-          ยังไม่มีประวัติการวิเคราะห์
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {records.map((record) => {
-            const isExpanded = expandedId === record.id;
-            let parsedData: StructuredResult | string | null = null;
-            try {
-              parsedData = JSON.parse(record.responseData);
-            } catch {
-              parsedData = record.responseData;
-            }
-
-            return (
-              <div key={record.id} className="rounded-xl bg-muted/40 overflow-hidden">
-                {/* Card Header */}
-                <button
-                  onClick={() => setExpandedId(isExpanded ? null : record.id)}
-                  className="flex w-full items-center justify-between p-3"
-                >
-                  <div className="flex flex-col items-start gap-0.5">
+              return (
+                <div key={record.id} className="rounded-xl bg-muted/40 overflow-hidden">
+                  {/* Card Header */}
+                  <button
+                    onClick={() => setExpandedId(isExpanded ? null : record.id)}
+                    className="flex w-full items-center justify-between p-3"
+                  >
+                    <div className="flex flex-col items-start gap-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                          {PROMPT_LABELS[record.promptType] || record.promptType}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">
+                          ปี {record.year + 543}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                        <span>{getWalletName(record.walletId)}</span>
+                        <span>·</span>
+                        <span>{formatDate(record.createdAt)}</span>
+                      </div>
+                    </div>
                     <div className="flex items-center gap-2">
-                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
-                        {PROMPT_LABELS[record.promptType] || record.promptType}
-                      </span>
-                      <span className="text-[10px] text-muted-foreground">
-                        ปี {record.year + 543}
-                      </span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteHistory(record.id);
+                        }}
+                        className="rounded-lg p-1.5 text-muted-foreground hover:text-expense hover:bg-expense/10 transition-colors"
+                      >
+                        <Trash2 className="size-3.5" />
+                      </button>
+                      {isExpanded ? (
+                        <ChevronUp className="size-4 text-muted-foreground" />
+                      ) : (
+                        <ChevronDown className="size-4 text-muted-foreground" />
+                      )}
                     </div>
-                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                      <span>{getWalletName(record.walletId)}</span>
-                      <span>·</span>
-                      <span>{formatDate(record.createdAt)}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteHistory(record.id);
-                      }}
-                      className="rounded-lg p-1.5 text-muted-foreground hover:text-expense hover:bg-expense/10 transition-colors"
-                    >
-                      <Trash2 className="size-3.5" />
-                    </button>
-                    {isExpanded ? (
-                      <ChevronUp className="size-4 text-muted-foreground" />
-                    ) : (
-                      <ChevronDown className="size-4 text-muted-foreground" />
-                    )}
-                  </div>
-                </button>
+                  </button>
 
-                {/* Expanded Content */}
-                {isExpanded && parsedData && (
-                  <div className="border-t border-border p-3">
-                    {record.responseType === 'structured' && typeof parsedData === 'object' ? (
-                      <StructuredResultView
-                        data={parsedData as StructuredResult}
-                        expandedSections={expandedSections}
-                        toggleSection={toggleSection}
-                      />
-                    ) : (
-                      <TextResultView text={typeof parsedData === 'string' ? parsedData : JSON.stringify(parsedData, null, 2)} />
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
+                  {/* Expanded Content */}
+                  {isExpanded && parsedData && (
+                    <div className="border-t border-border p-3">
+                      {record.responseType === 'structured' && typeof parsedData === 'object' ? (
+                        <StructuredResultView
+                          data={parsedData as StructuredResult}
+                          expandedSections={expandedSections}
+                          toggleSection={toggleSection}
+                        />
+                      ) : (
+                        <TextResultView text={typeof parsedData === 'string' ? parsedData : JSON.stringify(parsedData, null, 2)} />
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </PageContainer>
     </div>
   );
 }
