@@ -49,13 +49,13 @@ export async function POST(request: NextRequest) {
     const result = await model.generateContent(prompt);
     const text = result.response.text();
 
-    // For structured prompt, try to parse JSON from response
-    if (promptType === "structured") {
+    // For structured/full prompt, try to parse JSON from response
+    if (promptType === "structured" || promptType === "full") {
       try {
         const jsonMatch = text.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           const parsed = JSON.parse(jsonMatch[0]);
-          return NextResponse.json({ type: "structured", data: parsed });
+          return NextResponse.json({ type: promptType === "full" ? "full" : "structured", data: parsed });
         }
       } catch {
         // Fall through to text response if JSON parsing fails

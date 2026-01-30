@@ -6,7 +6,7 @@ import { WalletSelector } from '@/components/common/wallet-selector';
 import { useTransactionStore, useWalletStore } from '@/lib/stores';
 import { useAiHistoryStore } from '@/lib/stores/ai-history-store';
 import type { Wallet } from '@/types';
-import { ChevronLeft, ChevronRight, Download, Sparkles, Loader2, AlertCircle, TrendingUp, TrendingDown, Wallet as WalletIcon, Target, ShieldAlert, ChevronDown, ChevronUp, History, Trash2, ArrowLeft } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, Sparkles, Loader2, AlertCircle, TrendingUp, TrendingDown, Wallet as WalletIcon, Target, ShieldAlert, ChevronDown, ChevronUp, History, Trash2, ArrowLeft, CheckCircle2, PieChart, Lightbulb, Calendar, Star, BadgeAlert, BadgeCheck, BadgeMinus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 function fmt(n: number): string {
@@ -48,14 +48,77 @@ interface StructuredResult {
   warnings: string[];
 }
 
+interface FullResult {
+  summary: {
+    healthScore: string;
+    healthDescription: string;
+    totalIncome: number;
+    totalExpense: number;
+    balance: number;
+    savingRate: number;
+    incomeExpenseRatio: number;
+    rule503020: {
+      needs: { ideal: number; actual: number; amount: number; status: string };
+      wants: { ideal: number; actual: number; amount: number; status: string };
+      savings: { ideal: number; actual: number; amount: number; status: string };
+    };
+  };
+  savingsAndInvestment: {
+    currentSavingRate: number;
+    recommendedSavingRate: number;
+    monthlySaving: number;
+    monthlyInvestment: number;
+    emergencyFundTarget: number;
+    emergencyFundMonths: number;
+    investmentTypes: {
+      name: string;
+      allocation: number;
+      reason: string;
+    }[];
+  };
+  expensesToReduce: {
+    rank: number;
+    category: string;
+    amount: number;
+    percent: number;
+    targetReduction: number;
+    monthlySavings: number;
+    suggestion: string;
+  }[];
+  goodExpenses: {
+    category: string;
+    amount: number;
+    percent: number;
+    reason: string;
+  }[];
+  needExtraIncome: {
+    required: boolean;
+    suggestedAmount: number;
+    reason: string;
+    suggestions: string[];
+  };
+  actionPlan3Months: {
+    month1: { action: string; target: string }[];
+    month2: { action: string; target: string }[];
+    month3: { action: string; target: string }[];
+  };
+  warnings: {
+    level: string;
+    message: string;
+    suggestion: string;
+  }[];
+  overallScore: number;
+  topRecommendation: string;
+}
+
 interface AiResponse {
-  type: 'structured' | 'text';
-  data: StructuredResult | string;
+  type: 'structured' | 'full' | 'text';
+  data: StructuredResult | FullResult | string;
 }
 
 const PROMPT_OPTIONS: { value: PromptType; label: string; desc: string }[] = [
-  { value: 'structured', label: 'วิเคราะห์เชิงลึก', desc: 'ผลลัพธ์แบบ JSON แสดงผลสวยงาม' },
-  { value: 'full', label: 'รายงานเต็ม', desc: 'รายงานละเอียดทุกหัวข้อ' },
+  { value: 'structured', label: 'วิเคราะห์เชิงลึก', desc: 'ผลลัพธ์แบบสั้น' },
+  { value: 'full', label: 'วิเคราะห์เชิงลึก (แบบละเอียด)', desc: 'ผลลัพธ์แบบละเอียด รายละเอียดทุกหัวข้อ' },
 ];
 
 export function UseAiAnalysisTab() {
@@ -398,6 +461,12 @@ export function UseAiAnalysisTab() {
                     expandedSections={expandedSections}
                     toggleSection={toggleSection}
                   />
+                ) : result.type === 'full' ? (
+                  <FullResultView
+                    data={result.data as FullResult}
+                    expandedSections={expandedSections}
+                    toggleSection={toggleSection}
+                  />
                 ) : (
                   <TextResultView text={result.data as string} />
                 )}
@@ -407,6 +476,394 @@ export function UseAiAnalysisTab() {
         )}
       </PageContainer>
     </>
+  );
+}
+
+/* ─── Full Result UI (รายงานเต็มแบบ JSON) ─── */
+
+function FullResultView({
+  data,
+  expandedSections,
+  toggleSection,
+}: {
+  data: FullResult;
+  expandedSections: Record<string, boolean>;
+  toggleSection: (key: string) => void;
+}) {
+  const healthColor =
+    data.summary.healthScore === 'ดี'
+      ? 'text-income'
+      : data.summary.healthScore === 'ปานกลาง'
+        ? 'text-yellow-500'
+        : 'text-expense';
+
+  const healthBg =
+    data.summary.healthScore === 'ดี'
+      ? 'bg-income/10'
+      : data.summary.healthScore === 'ปานกลาง'
+        ? 'bg-yellow-500/10'
+        : 'bg-expense/10';
+
+  const scoreColor = data.overallScore >= 70 ? 'text-income' : data.overallScore >= 40 ? 'text-yellow-500' : 'text-expense';
+
+  return (
+    <div className="space-y-3">
+      {/* Overall Score & Health */}
+      <div className="rounded-xl bg-muted/40 p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <p className="text-[10px] text-muted-foreground">สุขภาพการเงิน</p>
+            <p className={cn('text-lg font-bold', healthColor)}>
+              {data.summary.healthScore}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-[10px] text-muted-foreground">คะแนนรวม</p>
+            <p className={cn('text-2xl font-black', scoreColor)}>
+              {data.overallScore}<span className="text-xs font-normal text-muted-foreground">/100</span>
+            </p>
+          </div>
+        </div>
+        {/* Score bar */}
+        <div className="h-2 w-full rounded-full bg-muted overflow-hidden mb-2">
+          <div
+            className={cn('h-full rounded-full transition-all', data.overallScore >= 70 ? 'bg-income' : data.overallScore >= 40 ? 'bg-yellow-500' : 'bg-expense')}
+            style={{ width: `${Math.min(data.overallScore, 100)}%` }}
+          />
+        </div>
+        <p className="text-[11px] text-muted-foreground leading-relaxed">{data.summary.healthDescription}</p>
+      </div>
+
+      {/* Top Recommendation */}
+      {data.topRecommendation && (
+        <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 flex gap-2 items-start">
+          <Lightbulb className="size-4 shrink-0 text-primary mt-0.5" />
+          <div>
+            <p className="text-[10px] font-semibold text-primary mb-0.5">คำแนะนำสำคัญ</p>
+            <p className="text-xs text-foreground leading-relaxed">{data.topRecommendation}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Income / Expense / Balance Cards */}
+      <div className="grid grid-cols-3 gap-2">
+        <div className="rounded-xl bg-muted/40 p-3 text-center">
+          <TrendingUp className="size-3.5 mx-auto mb-1 text-income" />
+          <p className="text-[10px] text-muted-foreground">รายรับ</p>
+          <p className="text-sm font-bold text-income">{fmt(data.summary.totalIncome)}</p>
+        </div>
+        <div className="rounded-xl bg-muted/40 p-3 text-center">
+          <TrendingDown className="size-3.5 mx-auto mb-1 text-expense" />
+          <p className="text-[10px] text-muted-foreground">รายจ่าย</p>
+          <p className="text-sm font-bold text-expense">{fmt(data.summary.totalExpense)}</p>
+        </div>
+        <div className="rounded-xl bg-muted/40 p-3 text-center">
+          <WalletIcon className="size-3.5 mx-auto mb-1 text-muted-foreground" />
+          <p className="text-[10px] text-muted-foreground">คงเหลือ</p>
+          <p className={cn('text-sm font-bold', data.summary.balance >= 0 ? 'text-income' : 'text-expense')}>
+            {data.summary.balance >= 0 ? '+' : ''}{fmt(data.summary.balance)}
+          </p>
+        </div>
+      </div>
+
+      {/* Ratios */}
+      <div className="grid grid-cols-2 gap-2">
+        <div className="rounded-xl bg-muted/40 p-3">
+          <p className="text-[10px] text-muted-foreground">อัตราการออม</p>
+          <p className={cn('text-lg font-bold', data.summary.savingRate >= 20 ? 'text-income' : data.summary.savingRate >= 10 ? 'text-yellow-500' : 'text-expense')}>
+            {data.summary.savingRate}%
+          </p>
+        </div>
+        <div className="rounded-xl bg-muted/40 p-3">
+          <p className="text-[10px] text-muted-foreground">อัตราส่วนรายรับ/รายจ่าย</p>
+          <p className={cn('text-lg font-bold', data.summary.incomeExpenseRatio >= 1 ? 'text-income' : 'text-expense')}>
+            {data.summary.incomeExpenseRatio.toFixed(2)}
+          </p>
+        </div>
+      </div>
+
+      {/* 50/30/20 Rule */}
+      <div className="rounded-xl bg-muted/40 p-3">
+        <p className="mb-2 text-xs font-semibold flex items-center gap-1.5">
+          <PieChart className="size-3.5" />
+          กฎ 50/30/20
+        </p>
+        <div className="space-y-3">
+          {([
+            { label: 'ค่าใช้จ่ายจำเป็น', key: 'needs' as const, color: 'bg-blue-500', colorText: 'text-blue-500' },
+            { label: 'ความต้องการ', key: 'wants' as const, color: 'bg-yellow-500', colorText: 'text-yellow-500' },
+            { label: 'ออม/ลงทุน', key: 'savings' as const, color: 'bg-income', colorText: 'text-income' },
+          ]).map((item) => {
+            const rule = data.summary.rule503020[item.key];
+            const diff = rule.actual - rule.ideal;
+            const StatusIcon = rule.status === 'ดี' ? BadgeCheck : rule.status === 'เกิน' ? BadgeAlert : BadgeMinus;
+            const statusColor = rule.status === 'ดี' ? 'text-income' : rule.status === 'เกิน' ? 'text-expense' : 'text-yellow-500';
+            return (
+              <div key={item.key}>
+                <div className="flex items-center justify-between text-xs mb-1">
+                  <span className="text-muted-foreground flex items-center gap-1">
+                    {item.label}
+                    <StatusIcon className={cn('size-3', statusColor)} />
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">{rule.actual}%</span>
+                    <span className="text-[10px] text-muted-foreground">/ {rule.ideal}%</span>
+                    {diff !== 0 && (
+                      <span className={cn('text-[10px] font-medium', diff > 0 ? 'text-expense' : 'text-income')}>
+                        {diff > 0 ? '+' : ''}{diff.toFixed(1)}%
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="h-2 flex-1 rounded-full bg-muted overflow-hidden">
+                    <div
+                      className={cn('h-full rounded-full transition-all', item.color)}
+                      style={{ width: `${Math.min(rule.actual, 100)}%` }}
+                    />
+                  </div>
+                  <span className="text-[10px] text-muted-foreground w-16 text-right">{fmt(rule.amount)} ฿</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Savings & Investment */}
+      <CollapsibleSection
+        title="การออมและการลงทุน"
+        icon={<WalletIcon className="size-3.5" />}
+        sectionKey="fullSavings"
+        expanded={expandedSections['fullSavings'] ?? true}
+        toggle={toggleSection}
+      >
+        <div className="grid grid-cols-2 gap-2 mb-3">
+          <div className="rounded-lg bg-background/60 p-2.5">
+            <p className="text-[10px] text-muted-foreground">อัตราออมปัจจุบัน</p>
+            <p className="text-sm font-bold">{data.savingsAndInvestment.currentSavingRate}%</p>
+          </div>
+          <div className="rounded-lg bg-background/60 p-2.5">
+            <p className="text-[10px] text-muted-foreground">อัตราออมแนะนำ</p>
+            <p className="text-sm font-bold text-income">{data.savingsAndInvestment.recommendedSavingRate}%</p>
+          </div>
+          <div className="rounded-lg bg-background/60 p-2.5">
+            <p className="text-[10px] text-muted-foreground">ควรออม/เดือน</p>
+            <p className="text-sm font-bold text-income">{fmt(data.savingsAndInvestment.monthlySaving)}</p>
+          </div>
+          <div className="rounded-lg bg-background/60 p-2.5">
+            <p className="text-[10px] text-muted-foreground">ควรลงทุน/เดือน</p>
+            <p className="text-sm font-bold text-income">{fmt(data.savingsAndInvestment.monthlyInvestment)}</p>
+          </div>
+        </div>
+        <div className="rounded-lg bg-background/60 p-2.5 mb-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[10px] text-muted-foreground">เงินสำรองฉุกเฉินเป้าหมาย</p>
+              <p className="text-sm font-bold">{fmt(data.savingsAndInvestment.emergencyFundTarget)} บาท</p>
+            </div>
+            <span className="text-[10px] rounded-full bg-primary/10 text-primary px-2 py-0.5 font-medium">
+              {data.savingsAndInvestment.emergencyFundMonths} เดือน
+            </span>
+          </div>
+        </div>
+        {data.savingsAndInvestment.investmentTypes.length > 0 && (
+          <div>
+            <p className="mb-2 text-[10px] font-semibold text-muted-foreground">ประเภทการลงทุนแนะนำ</p>
+            <div className="space-y-2">
+              {data.savingsAndInvestment.investmentTypes.map((inv, i) => (
+                <div key={i} className="rounded-lg bg-background/60 p-2.5">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-medium">{inv.name}</span>
+                    <span className="text-xs font-bold text-primary">{inv.allocation}%</span>
+                  </div>
+                  <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden mb-1.5">
+                    <div className="h-full rounded-full bg-primary/60 transition-all" style={{ width: `${inv.allocation}%` }} />
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">{inv.reason}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </CollapsibleSection>
+
+      {/* Expenses to Reduce */}
+      {data.expensesToReduce.length > 0 && (
+        <CollapsibleSection
+          title="หมวดที่ควรลด"
+          icon={<TrendingDown className="size-3.5" />}
+          sectionKey="fullExpReduce"
+          expanded={expandedSections['fullExpReduce'] ?? true}
+          toggle={toggleSection}
+        >
+          <div className="space-y-2">
+            {data.expensesToReduce.map((item, i) => (
+              <div key={i} className="rounded-lg bg-background/60 p-2.5">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2">
+                    <span className="flex size-5 items-center justify-center rounded-full bg-expense/10 text-[10px] font-bold text-expense">
+                      {item.rank || i + 1}
+                    </span>
+                    <span className="text-xs font-medium">{item.category}</span>
+                  </div>
+                  <span className="text-xs font-bold text-expense">{fmt(item.amount)} ฿</span>
+                </div>
+                <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-1.5">
+                  <span>{item.percent}% ของรายจ่าย</span>
+                  <span className="text-income font-medium">ลดได้ {fmt(item.targetReduction)} ฿ (ประหยัด {fmt(item.monthlySavings)}/เดือน)</span>
+                </div>
+                {item.suggestion && (
+                  <p className="text-[10px] text-muted-foreground bg-muted/60 rounded-md px-2 py-1">{item.suggestion}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </CollapsibleSection>
+      )}
+
+      {/* Good Expenses */}
+      {data.goodExpenses && data.goodExpenses.length > 0 && (
+        <CollapsibleSection
+          title="รายจ่ายที่เหมาะสม"
+          icon={<CheckCircle2 className="size-3.5" />}
+          sectionKey="fullGoodExp"
+          expanded={expandedSections['fullGoodExp'] ?? true}
+          toggle={toggleSection}
+        >
+          <div className="space-y-2">
+            {data.goodExpenses.map((item, i) => (
+              <div key={i} className="rounded-lg bg-background/60 p-2.5 flex items-start gap-2.5">
+                <CheckCircle2 className="size-4 shrink-0 text-income mt-0.5" />
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-0.5">
+                    <span className="text-xs font-medium">{item.category}</span>
+                    <span className="text-xs font-medium">{fmt(item.amount)} ฿ <span className="text-[10px] text-muted-foreground">({item.percent}%)</span></span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">{item.reason}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CollapsibleSection>
+      )}
+
+      {/* Need Extra Income */}
+      <CollapsibleSection
+        title="ความจำเป็นหารายได้เสริม"
+        icon={<TrendingUp className="size-3.5" />}
+        sectionKey="fullExtraIncome"
+        expanded={expandedSections['fullExtraIncome'] ?? true}
+        toggle={toggleSection}
+      >
+        <div className="flex items-center gap-2 text-xs mb-2">
+          <span
+            className={cn(
+              'rounded-full px-2 py-0.5 text-[10px] font-bold',
+              data.needExtraIncome.required
+                ? 'bg-expense/10 text-expense'
+                : 'bg-income/10 text-income'
+            )}
+          >
+            {data.needExtraIncome.required ? 'จำเป็น' : 'ไม่จำเป็น'}
+          </span>
+          {data.needExtraIncome.required && data.needExtraIncome.suggestedAmount > 0 && (
+            <span className="text-muted-foreground">
+              แนะนำเพิ่ม {fmt(data.needExtraIncome.suggestedAmount)} บาท/เดือน
+            </span>
+          )}
+        </div>
+        {data.needExtraIncome.reason && (
+          <p className="text-[11px] text-muted-foreground mb-2">{data.needExtraIncome.reason}</p>
+        )}
+        {data.needExtraIncome.suggestions && data.needExtraIncome.suggestions.length > 0 && (
+          <div>
+            <p className="text-[10px] font-semibold text-muted-foreground mb-1">แนวทางหารายได้เสริม</p>
+            <div className="space-y-1">
+              {data.needExtraIncome.suggestions.map((s, i) => (
+                <div key={i} className="flex items-start gap-2 text-[11px] text-muted-foreground">
+                  <Star className="size-3 shrink-0 text-yellow-500 mt-0.5" />
+                  <span>{s}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </CollapsibleSection>
+
+      {/* 3-Month Action Plan */}
+      <CollapsibleSection
+        title="แผนปฏิบัติ 3 เดือน"
+        icon={<Calendar className="size-3.5" />}
+        sectionKey="fullActionPlan"
+        expanded={expandedSections['fullActionPlan'] ?? true}
+        toggle={toggleSection}
+      >
+        {(['month1', 'month2', 'month3'] as const).map((monthKey, mi) => {
+          const actions = data.actionPlan3Months?.[monthKey];
+          if (!actions || actions.length === 0) return null;
+          return (
+            <div key={monthKey} className={cn('pb-3', mi < 2 && 'border-b border-border mb-3')}>
+              <p className="text-xs font-semibold mb-2 flex items-center gap-1.5">
+                <span className="flex size-5 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">
+                  {mi + 1}
+                </span>
+                เดือนที่ {mi + 1}
+              </p>
+              <div className="space-y-1.5">
+                {actions.map((step, i) => (
+                  <div key={i} className="rounded-lg bg-background/60 p-2 flex items-start gap-2">
+                    <Target className="size-3 shrink-0 text-primary mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-[11px] font-medium">{step.action}</p>
+                      {step.target && (
+                        <p className="text-[10px] text-muted-foreground">เป้าหมาย: {step.target}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </CollapsibleSection>
+
+      {/* Warnings */}
+      {data.warnings && data.warnings.length > 0 && (
+        <CollapsibleSection
+          title="ข้อควรระวัง"
+          icon={<ShieldAlert className="size-3.5" />}
+          sectionKey="fullWarnings"
+          expanded={expandedSections['fullWarnings'] ?? true}
+          toggle={toggleSection}
+        >
+          <div className="space-y-2">
+            {data.warnings.map((w, i) => {
+              const levelColor = w.level === 'high' ? 'bg-expense/10 text-expense' : w.level === 'medium' ? 'bg-yellow-500/10 text-yellow-500' : 'bg-blue-500/10 text-blue-500';
+              const levelLabel = w.level === 'high' ? 'สูง' : w.level === 'medium' ? 'ปานกลาง' : 'ต่ำ';
+              return (
+                <div key={i} className="rounded-lg bg-background/60 p-2.5">
+                  <div className="flex items-start gap-2 mb-1">
+                    <AlertCircle className="size-3.5 shrink-0 text-expense mt-0.5" />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <span className={cn('rounded-full px-1.5 py-0.5 text-[9px] font-bold', levelColor)}>
+                          {levelLabel}
+                        </span>
+                      </div>
+                      <p className="text-[11px] font-medium text-foreground">{w.message}</p>
+                      {w.suggestion && (
+                        <p className="text-[10px] text-muted-foreground mt-0.5">{w.suggestion}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </CollapsibleSection>
+      )}
+    </div>
   );
 }
 
@@ -678,7 +1135,7 @@ function TextResultView({ text }: { text: string }) {
 const PROMPT_LABELS: Record<string, string> = {
   compact: 'สรุปย่อ',
   structured: 'วิเคราะห์เชิงลึก',
-  full: 'รายงานเต็ม',
+  full: 'วิเคราะห์เชิงลึก (แบบละเอียด)',
 };
 
 function AiHistoryView({ onBack, wallets }: { onBack: () => void; wallets: Wallet[] }) {
@@ -744,7 +1201,7 @@ function AiHistoryView({ onBack, wallets }: { onBack: () => void; wallets: Walle
           </>
         }
       />
-      <PageContainer className="pt-4 pb-8">
+      <PageContainer className="pt-4 pb-18">
         {records.length === 0 ? (
           <div className="py-16 text-center text-sm text-muted-foreground">
             ยังไม่มีประวัติการวิเคราะห์
@@ -753,7 +1210,7 @@ function AiHistoryView({ onBack, wallets }: { onBack: () => void; wallets: Walle
           <div className="space-y-2">
             {records.map((record) => {
               const isExpanded = expandedId === record.id;
-              let parsedData: StructuredResult | string | null = null;
+              let parsedData: FullResult | StructuredResult | string | null = null;
               try {
                 parsedData = JSON.parse(record.responseData);
               } catch {
@@ -803,7 +1260,13 @@ function AiHistoryView({ onBack, wallets }: { onBack: () => void; wallets: Walle
                   {/* Expanded Content */}
                   {isExpanded && parsedData && (
                     <div className="border-t border-border p-3">
-                      {record.responseType === 'structured' && typeof parsedData === 'object' ? (
+                      {record.responseType === 'full' && typeof parsedData === 'object' ? (
+                        <FullResultView
+                          data={parsedData as FullResult}
+                          expandedSections={expandedSections}
+                          toggleSection={toggleSection}
+                        />
+                      ) : record.responseType === 'structured' && typeof parsedData === 'object' ? (
                         <StructuredResultView
                           data={parsedData as StructuredResult}
                           expandedSections={expandedSections}

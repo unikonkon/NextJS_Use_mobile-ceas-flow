@@ -51,7 +51,7 @@ export interface StoredAiHistory {
   walletId: string | null;
   promptType: AiPromptType;
   year: number;
-  responseType: 'structured' | 'text';
+  responseType: 'structured' | 'full' | 'text';
   responseData: string; // JSON stringified
   createdAt: string; // ISO string
 }
@@ -227,7 +227,7 @@ export interface AiHistory {
   walletId: string | null;
   promptType: AiPromptType;
   year: number;
-  responseType: 'structured' | 'text';
+  responseType: 'structured' | 'full' | 'text';
   responseData: string; // JSON stringified
   createdAt: Date;
 }

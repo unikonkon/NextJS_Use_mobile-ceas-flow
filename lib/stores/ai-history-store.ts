@@ -22,7 +22,7 @@ interface AiHistoryState {
     walletId: string | null;
     promptType: AiPromptType;
     year: number;
-    responseType: 'structured' | 'text';
+    responseType: 'structured' | 'full' | 'text';
     responseData: unknown;
   }) => Promise<void>;
   deleteHistory: (id: string) => Promise<void>;
