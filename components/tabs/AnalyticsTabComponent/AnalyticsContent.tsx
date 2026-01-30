@@ -259,7 +259,7 @@ function ChartViewModeSelector({
         <div className="flex items-center gap-3">
           <div
             className={cn(
-              'size-10 rounded-xl flex items-center justify-center',
+              'size-8 rounded-xl flex items-center justify-center',
               'transition-all duration-300',
               currentMode.bgColor,
               currentMode.color
@@ -271,9 +271,9 @@ function ChartViewModeSelector({
             <p className="text-sm font-semibold text-foreground">
               {currentMode.label}
             </p>
-            <p className={cn('text-xs font-medium', currentMode.color)}>
+            {/* <p className={cn('text-xs font-medium', currentMode.color)}>
               ฿{getTotalForMode(mode).toLocaleString()}
-            </p>
+            </p> */}
           </div>
         </div>
         <ChevronDown
@@ -960,7 +960,7 @@ function CategoryDetailSheet({
               <p className="text-lg font-bold text-foreground">{transactions.length}</p>
             </div>
             <div className="bg-muted/30 rounded-xl p-3 text-center">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">วัน</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">วันทำรายการ</p>
               <p className="text-lg font-bold text-foreground">{groupedTransactions.length}</p>
             </div>
             <div className="bg-muted/30 rounded-xl p-3 text-center">
@@ -1050,10 +1050,16 @@ function CategoryList({
   summaries,
   transactions,
   viewMode,
+  filterMode,
+  selectedMonths,
+  selectedYear,
 }: {
   summaries: CategorySummary[];
   transactions: TransactionWithCategory[];
   viewMode: ChartViewMode;
+  filterMode: FilterMode;
+  selectedMonths: MonthSelection[];
+  selectedYear: number;
 }) {
   const [mounted, setMounted] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<{
@@ -1085,6 +1091,17 @@ function CategoryList({
     },
     [transactions, viewMode]
   );
+
+  const totalDays = useMemo(() => {
+    if (filterMode === 'yearly') {
+      let days = 0;
+      for (let m = 0; m < 12; m++) {
+        days += getDaysInMonth(selectedYear, m);
+      }
+      return days;
+    }
+    return selectedMonths.reduce((sum, s) => sum + getDaysInMonth(s.year, s.month), 0);
+  }, [filterMode, selectedMonths, selectedYear]);
 
   if (summaries.length === 0) {
     return (
@@ -1118,21 +1135,21 @@ function CategoryList({
                 background: `linear-gradient(90deg, ${CHART_COLORS[index % CHART_COLORS.length]} ${summary.percentage}%, transparent ${summary.percentage}%)`,
               }}
             />
-            <div className="relative flex items-center gap-3 p-3.5">
+            <div className="relative flex items-center gap-1.5 p-2">
               <div
                 className="shrink-0 size-11 rounded-xl flex items-center justify-center text-xl"
                 style={{ backgroundColor: `${CHART_COLORS[index % CHART_COLORS.length]}20` }}
               >
                 {summary.category.icon}
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 min-w-0">
+              <div className="flex justify-between w-full items-center">
+                <div className="flex-1 max-w-[125px] justify-between gap-2">
+                  <div className="flex gap-2 min-w-0">
                     <p className="font-medium text-foreground truncate">{summary.category.name}</p>
                     {viewMode === 'all' && (
                       <div
                         className={cn(
-                          'flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium shrink-0',
+                          'flex gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium shrink-0',
                           summary.category.type === 'expense'
                             ? 'bg-rose-500/10 text-rose-500'
                             : 'bg-emerald-500/10 text-emerald-500'
@@ -1152,27 +1169,40 @@ function CategoryList({
                       </div>
                     )}
                   </div>
-                  <CurrencyDisplay
-                    amount={summary.amount}
-                    size="sm"
-                    variant={viewMode === 'expense' ? 'expense' : viewMode === 'income' ? 'income' : summary.category.type === 'expense' ? 'expense' : 'income'}
-                    className="font-semibold shrink-0"
-                  />
+
                 </div>
-                <div className="flex items-center justify-between mt-1.5">
-                  <span className="text-xs text-muted-foreground">{summary.transactionCount} รายการ</span>
+                <div className="flex items-center gap-2">
                   <span
-                    className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                    className="text-[15px] font-semibold px-2 py-0.5 rounded-full"
                     style={{
-                      backgroundColor: `${CHART_COLORS[index % CHART_COLORS.length]}15`,
+                      // backgroundColor: `${CHART_COLORS[index % CHART_COLORS.length]}15`,
                       color: CHART_COLORS[index % CHART_COLORS.length],
                     }}
                   >
                     {summary.percentage.toFixed(1)}%
                   </span>
                 </div>
+                <div className="flex justify-end items-center gap-2">
+                  <div className="flex-col min-w-0 flex items-end gap-1">
+                    <CurrencyDisplay
+                      amount={summary.amount}
+                      size="md"
+                      variant={viewMode === 'expense' ? 'expense' : viewMode === 'income' ? 'income' : summary.category.type === 'expense' ? 'expense' : 'income'}
+                      className="font-semibold shrink-0"
+                    />
+                    <span className="text-[8px] text-muted-foreground flex items-center gap-1">เฉลี่ยต่อวัน
+                      <CurrencyDisplay
+                        amount={totalDays > 0 ? Math.round(summary.amount / totalDays) : 0}
+                        size="sm"
+                        variant="muted"
+                        className="font-medium shrink-0 opacity-75"
+                      />
+                    </span>
+                  </div>
+                  <ChevronRight className="size-4 text-muted-foreground/50 shrink-0" />
+
+                </div>
               </div>
-              <ChevronRight className="size-4 text-muted-foreground/50 shrink-0" />
             </div>
           </button>
         ))}
@@ -1289,7 +1319,7 @@ function DailyAverageSummary({
           </div>
         </div>
       ))}
-      <div className="flex items-center px-2">
+      <div className="flex items-center px-2 bg-card rounded-xl border border-border/40">
         <span className="text-[14px] font-semibold text-muted-foreground whitespace-nowrap">
           {totalDays} วัน
         </span>
@@ -1580,7 +1610,7 @@ export function AnalyticsContent() {
     <>
       {/* Reset button - inline action bar */}
       {!isCurrentMonthSelected && (
-        <div className="flex justify-end px-4 mb-2">
+        <div className="flex justify-end px-4 mt-2">
           <button
             onClick={handleReset}
             className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors"
@@ -1780,6 +1810,9 @@ export function AnalyticsContent() {
             summaries={currentSummaries}
             transactions={filteredTransactions}
             viewMode={chartViewMode}
+            filterMode={filterMode}
+            selectedMonths={selectedMonths}
+            selectedYear={selectedYear}
           />
         </div>
 
