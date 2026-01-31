@@ -27,9 +27,16 @@ import {
   Tags,
   FileText,
   FileUp,
+  ChevronRight,
+  Info,
+  Table,
+  FileCheck,
+  Plus,
 } from 'lucide-react';
 
-// Progress bar component with animated segments
+type ActiveMode = 'export' | 'import';
+
+// Progress bar component
 function ProgressBar({
   progress,
   status,
@@ -60,7 +67,6 @@ function ProgressBar({
 
   return (
     <div className="relative h-2 w-full overflow-hidden rounded-full bg-muted/50">
-      {/* Animated background shimmer */}
       {isActive && (
         <div
           className="absolute inset-0 animate-pulse"
@@ -72,7 +78,6 @@ function ProgressBar({
           }}
         />
       )}
-      {/* Progress fill */}
       <div
         className={cn(
           'h-full transition-all duration-500 ease-out',
@@ -88,8 +93,8 @@ function ProgressBar({
   );
 }
 
-// Feature item component
-function FeatureItem({
+// Detail row for description sections
+function DetailRow({
   icon,
   label,
   description,
@@ -99,50 +104,13 @@ function FeatureItem({
   description: string;
 }) {
   return (
-    <div className="flex items-start gap-3">
-      <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent/50 text-accent-foreground">
+    <div className="flex items-start gap-2.5">
+      <div className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-md bg-accent/40 text-accent-foreground">
         {icon}
       </div>
-      <div className="flex flex-col">
-        <span className="text-sm font-medium text-foreground">{label}</span>
-        <span className="text-xs text-muted-foreground">{description}</span>
-      </div>
-    </div>
-  );
-}
-
-// Stats preview component
-function StatsPreview({
-  transactionCount,
-  walletCount,
-  categoryCount,
-}: {
-  transactionCount: number;
-  walletCount: number;
-  categoryCount: number;
-}) {
-  return (
-    <div className="grid grid-cols-3 gap-2">
-      <div className="flex flex-col items-center rounded-xl bg-muted/30 p-3">
-        <FileText className="mb-1 size-4 text-primary" />
-        <span className="text-lg font-bold tabular-nums text-foreground">
-          {transactionCount.toLocaleString()}
-        </span>
-        <span className="text-[10px] text-muted-foreground">รายการ</span>
-      </div>
-      <div className="flex flex-col items-center rounded-xl bg-muted/30 p-3">
-        <Wallet className="mb-1 size-4 text-income" />
-        <span className="text-lg font-bold tabular-nums text-foreground">
-          {walletCount}
-        </span>
-        <span className="text-[10px] text-muted-foreground">กระเป๋า</span>
-      </div>
-      <div className="flex flex-col items-center rounded-xl bg-muted/30 p-3">
-        <Tags className="mb-1 size-4 text-expense" />
-        <span className="text-lg font-bold tabular-nums text-foreground">
-          {categoryCount}
-        </span>
-        <span className="text-[10px] text-muted-foreground">หมวดหมู่</span>
+      <div className="flex flex-col gap-0.5">
+        <span className="text-[13px] font-medium leading-tight text-foreground">{label}</span>
+        <span className="text-[11px] leading-snug text-muted-foreground">{description}</span>
       </div>
     </div>
   );
@@ -150,6 +118,7 @@ function StatsPreview({
 
 // Main component
 export function ExportDataCard() {
+  const [mode, setMode] = useState<ActiveMode>('export');
   const [exportProgress, setExportProgress] = useState<ExportProgress>({
     status: 'idle',
     progress: 0,
@@ -160,6 +129,12 @@ export function ExportDataCard() {
     progress: 0,
     message: '',
   });
+
+  const [importSnapshot, setImportSnapshot] = useState<{
+    transactions: number;
+    wallets: number;
+    categories: number;
+  } | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -174,6 +149,7 @@ export function ExportDataCard() {
     exportProgress.status !== 'idle' && exportProgress.status !== 'complete' && exportProgress.status !== 'error';
   const isImporting =
     importProgress.status !== 'idle' && importProgress.status !== 'complete' && importProgress.status !== 'error';
+  const isBusy = isExporting || isImporting;
 
   const handleExport = useCallback(async () => {
     if (isExporting) return;
@@ -187,12 +163,10 @@ export function ExportDataCard() {
     try {
       await exportToExcel(data, setExportProgress);
 
-      // Reset after success
       setTimeout(() => {
         setExportProgress({ status: 'idle', progress: 0, message: '' });
       }, 3000);
     } catch {
-      // Reset after error
       setTimeout(() => {
         setExportProgress({ status: 'idle', progress: 0, message: '' });
       }, 3000);
@@ -208,8 +182,17 @@ export function ExportDataCard() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Reset file input so same file can be selected again
     e.target.value = '';
+
+    // Snapshot current counts before import
+    const currentWallets = useWalletStore.getState().wallets;
+    const currentCategories = getAllCategories();
+    const currentTransactions = useTransactionStore.getState().transactions;
+    setImportSnapshot({
+      transactions: currentTransactions.length,
+      wallets: currentWallets.length,
+      categories: currentCategories.length,
+    });
 
     const deps: ImportDependencies = {
       existingWallets: useWalletStore.getState().wallets.map((w) => ({ id: w.id, name: w.name })),
@@ -226,19 +209,23 @@ export function ExportDataCard() {
     try {
       await importFromExcel(file, deps, setImportProgress);
 
-      // Reset after success
       setTimeout(() => {
         setImportProgress({ status: 'idle', progress: 0, message: '' });
+        setImportSnapshot(null);
       }, 4000);
     } catch {
-      // Reset after error
       setTimeout(() => {
         setImportProgress({ status: 'idle', progress: 0, message: '' });
+        setImportSnapshot(null);
       }, 4000);
     }
   }, [getAllCategories, addCategory, addWallet, addTransaction]);
 
   const canExport = transactions.length > 0;
+
+  // Active progress state
+  const activeProgress = mode === 'export' ? exportProgress : importProgress;
+  const showProgress = activeProgress.status !== 'idle';
 
   return (
     <Card className="group relative overflow-hidden border-border bg-card transition-all duration-300 hover:shadow-soft">
@@ -253,18 +240,9 @@ export function ExportDataCard() {
 
       <CardContent className="relative p-5">
         {/* Header */}
-        <div className="mb-5 flex items-center gap-3">
-          <div className="relative">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-linear-to-br from-income/20 via-primary/10 to-income/5">
-              <FileSpreadsheet className="size-6 text-income" />
-            </div>
-            {/* Pulse indicator when can export */}
-            {canExport && exportProgress.status === 'idle' && importProgress.status === 'idle' && (
-              <div className="absolute -right-0.5 -top-0.5 size-3">
-                <span className="absolute inline-flex size-full animate-ping rounded-full bg-income opacity-75" />
-                <span className="relative inline-flex size-3 rounded-full bg-income" />
-              </div>
-            )}
+        <div className="mb-4 flex items-center gap-3">
+          <div className="flex size-11 items-center justify-center rounded-2xl bg-linear-to-br from-income/20 via-primary/10 to-income/5">
+            <FileSpreadsheet className="size-5.5 text-income" />
           </div>
           <div>
             <h3 className="font-semibold text-foreground">จัดการข้อมูล Excel</h3>
@@ -274,45 +252,226 @@ export function ExportDataCard() {
           </div>
         </div>
 
-        {/* Stats Preview */}
-        <div className="mb-5">
-          <StatsPreview
-            transactionCount={transactions.length}
-            walletCount={wallets.length}
-            categoryCount={allCategories.length}
-          />
+        {/* Mode Selector Tabs */}
+        <div className="mb-4 flex gap-2 rounded-xl bg-muted/30 p-1.5">
+          <button
+            onClick={() => !isBusy && setMode('export')}
+            disabled={isBusy}
+            className={cn(
+              'flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium transition-all duration-200',
+              'disabled:cursor-not-allowed',
+              mode === 'export'
+                ? 'bg-card text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground/70'
+            )}
+          >
+            <FolderDown className="size-4" />
+            <span>ส่งออก</span>
+          </button>
+          <button
+            onClick={() => !isBusy && setMode('import')}
+            disabled={isBusy}
+            className={cn(
+              'flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium transition-all duration-200',
+              'disabled:cursor-not-allowed',
+              mode === 'import'
+                ? 'bg-card text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground/70'
+            )}
+          >
+            <FileUp className="size-4" />
+            <span>นำเข้า</span>
+          </button>
         </div>
 
-        {/* Features */}
-        <div className="mb-5 space-y-3 rounded-xl bg-muted/20 p-4">
-          <p className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            ไฟล์จะประกอบด้วย
-          </p>
-          <FeatureItem
-            icon={<Wallet className="size-4" />}
-            label="แยกตามกระเป๋าเงิน"
-            description="แต่ละกระเป๋าเงินมีแผ่นงานแยก"
-          />
-          <FeatureItem
-            icon={<Calendar className="size-4" />}
-            label="แยกตามเดือน/ปี"
-            description="ข้อมูลจัดกลุ่มตามช่วงเวลา"
-          />
-          <FeatureItem
-            icon={<Tags className="size-4" />}
-            label="แยกตามหมวดหมู่"
-            description="สรุปยอดและรายละเอียดแต่ละหมวด"
-          />
-        </div>
+        {/* Export Mode Content */}
+        {mode === 'export' && (
+          <div className="animate-in fade-in-0 slide-in-from-left-2 duration-200">
+            {/* Stats Preview */}
+            <div className="mb-4 grid grid-cols-3 gap-2">
+              <div className="flex flex-col items-center rounded-xl bg-muted/30 p-2.5">
+                <FileText className="mb-1 size-3.5 text-primary" />
+                <span className="text-base font-bold tabular-nums text-foreground">
+                  {transactions.length.toLocaleString()}
+                </span>
+                <span className="text-[10px] text-muted-foreground">รายการ</span>
+              </div>
+              <div className="flex flex-col items-center rounded-xl bg-muted/30 p-2.5">
+                <Wallet className="mb-1 size-3.5 text-income" />
+                <span className="text-base font-bold tabular-nums text-foreground">
+                  {wallets.length}
+                </span>
+                <span className="text-[10px] text-muted-foreground">กระเป๋า</span>
+              </div>
+              <div className="flex flex-col items-center rounded-xl bg-muted/30 p-2.5">
+                <Tags className="mb-1 size-3.5 text-expense" />
+                <span className="text-base font-bold tabular-nums text-foreground">
+                  {allCategories.length}
+                </span>
+                <span className="text-[10px] text-muted-foreground">หมวดหมู่</span>
+              </div>
+            </div>
 
-        {/* Export Progress Section */}
-        {exportProgress.status !== 'idle' && (
-          <div className="mb-5 animate-slide-up">
+            {/* Export Description */}
+            <div className="mb-4 space-y-3 rounded-xl bg-muted/20 p-3.5">
+              <div className="flex items-center gap-1.5">
+                <Info className="size-3.5 text-muted-foreground" />
+                <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                  ไฟล์ที่ส่งออกจะประกอบด้วย
+                </p>
+              </div>
+              <DetailRow
+                icon={<Table className="size-3.5" />}
+                label="ภาพรวมทั้งหมด"
+                description="สรุปรายรับ-รายจ่ายรวม, ยอดคงเหลือ, ช่วงเวลาข้อมูล"
+              />
+              <DetailRow
+                icon={<Wallet className="size-3.5" />}
+                label="แยกตามกระเป๋าเงิน"
+                description="แต่ละกระเป๋ามีชีทแยก พร้อมสรุปยอดและรายการทั้งหมด"
+              />
+              <DetailRow
+                icon={<Calendar className="size-3.5" />}
+                label="แยกตามเดือน/ปี"
+                description="จัดกลุ่มรายการตามช่วงเวลา สรุปรายเดือน"
+              />
+              <DetailRow
+                icon={<Tags className="size-3.5" />}
+                label="แยกตามหมวดหมู่"
+                description="สรุปยอดแต่ละหมวด พร้อมรายละเอียดรายการ"
+              />
+            </div>
+
+            <div className="mb-4 rounded-lg border border-income/20 bg-income/5 px-3 py-2">
+              <p className="text-[11px] leading-relaxed text-foreground/70">
+                ไฟล์จะถูกดาวน์โหลดเป็น <span className="font-semibold text-income">CeasFlow_Export_วันที่.xlsx</span> สามารถเปิดด้วย Excel, Google Sheets หรือแอปสเปรดชีตอื่นๆ
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Import Mode Content */}
+        {mode === 'import' && (
+          <div className="animate-in fade-in-0 slide-in-from-right-2 duration-200">
+            {/* Import Description */}
+            <div className="mb-4 space-y-3 rounded-xl bg-muted/20 p-3.5">
+              <div className="flex items-center gap-1.5">
+                <Info className="size-3.5 text-muted-foreground" />
+                <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                  รูปแบบไฟล์ที่รองรับ
+                </p>
+              </div>
+              <DetailRow
+                icon={<FileCheck className="size-3.5" />}
+                label="ไฟล์ .xlsx หรือ .xls"
+                description="ไฟล์ Excel ที่ส่งออกจาก CeasFlow โดยตรง"
+              />
+              <DetailRow
+                icon={<Wallet className="size-3.5" />}
+                label="ต้องมีชีทกระเป๋าเงิน"
+                description={'ชีทที่ขึ้นต้นด้วย "💰" จะถูกอ่านเป็นข้อมูลกระเป๋าเงิน'}
+              />
+              <DetailRow
+                icon={<Table className="size-3.5" />}
+                label="โครงสร้างข้อมูลในชีท"
+                description="แถวแรก: ชื่อกระเป๋า, ประเภท, ยอดเริ่มต้น → ตามด้วยตาราง วันที่ ประเภท ไอคอน หมวดหมู่ จำนวนเงิน หมายเหตุ"
+              />
+            </div>
+
+            <div className="mb-4 space-y-2.5 rounded-xl bg-muted/20 p-3.5">
+              <div className="flex items-center gap-1.5">
+                <ChevronRight className="size-3.5 text-muted-foreground" />
+                <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                  ไฟล์ได้จากไหน?
+                </p>
+              </div>
+              <div className="space-y-2 pl-0.5">
+                <div className="flex items-start gap-2">
+                  <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-income/15 text-[10px] font-bold text-income">1</span>
+                  <p className="text-[12px] leading-relaxed text-foreground/80">
+                    <span className="font-medium">ส่งออกจาก CeasFlow</span> — ใช้ปุ่มส่งออกในแท็บนี้ แล้วนำไฟล์กลับมานำเข้า
+                  </p>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-income/15 text-[10px] font-bold text-income">2</span>
+                  <p className="text-[12px] leading-relaxed text-foreground/80">
+                    <span className="font-medium">สร้างเองด้วย Excel</span> — สร้างไฟล์ .xlsx ตามรูปแบบที่กำหนด (ชีท 💰 + ตารางข้อมูล)
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-4 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2">
+              <p className="text-[11px] leading-relaxed text-foreground/70">
+                หากชื่อกระเป๋าซ้ำกับที่มีอยู่ ระบบจะสร้างใหม่ต่อท้ายด้วย <span className="font-semibold text-primary">(ซ้ำ)</span> โดยอัตโนมัติ หมวดหมู่ที่ยังไม่มีจะถูกสร้างใหม่ให้
+              </p>
+            </div>
+
+            {/* Import Live Summary — visible during/after import */}
+            {importSnapshot && importProgress.status !== 'idle' && (
+              <div className="mb-4 animate-in fade-in-0 slide-in-from-bottom-2 duration-300">
+                <div className="rounded-xl border border-border bg-card p-3.5">
+                  <p className="mb-3 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                    {importProgress.status === 'complete' ? 'สรุปการนำเข้า' : 'กำลังนำเข้า...'}
+                  </p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {/* Transactions */}
+                    <div className="flex flex-col items-center rounded-lg bg-muted/25 p-2.5">
+                      <FileText className="mb-1 size-3.5 text-primary" />
+                      <span className="text-sm font-bold tabular-nums text-foreground">
+                        {transactions.length.toLocaleString()}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground">รายการ</span>
+                      {transactions.length - importSnapshot.transactions > 0 && (
+                        <span className="mt-1 flex items-center gap-0.5 rounded-full bg-income/15 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-income">
+                          <Plus className="size-2.5" />
+                          {(transactions.length - importSnapshot.transactions).toLocaleString()}
+                        </span>
+                      )}
+                    </div>
+                    {/* Wallets */}
+                    <div className="flex flex-col items-center rounded-lg bg-muted/25 p-2.5">
+                      <Wallet className="mb-1 size-3.5 text-income" />
+                      <span className="text-sm font-bold tabular-nums text-foreground">
+                        {wallets.length}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground">กระเป๋า</span>
+                      {wallets.length - importSnapshot.wallets > 0 && (
+                        <span className="mt-1 flex items-center gap-0.5 rounded-full bg-income/15 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-income">
+                          <Plus className="size-2.5" />
+                          {wallets.length - importSnapshot.wallets}
+                        </span>
+                      )}
+                    </div>
+                    {/* Categories */}
+                    <div className="flex flex-col items-center rounded-lg bg-muted/25 p-2.5">
+                      <Tags className="mb-1 size-3.5 text-expense" />
+                      <span className="text-sm font-bold tabular-nums text-foreground">
+                        {allCategories.length}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground">หมวดหมู่</span>
+                      {allCategories.length - importSnapshot.categories > 0 && (
+                        <span className="mt-1 flex items-center gap-0.5 rounded-full bg-income/15 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-income">
+                          <Plus className="size-2.5" />
+                          {allCategories.length - importSnapshot.categories}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Progress Section */}
+        {showProgress && (
+          <div className="mb-4 animate-slide-up">
             <div className="mb-2 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                {exportProgress.status === 'complete' ? (
+                {activeProgress.status === 'complete' ? (
                   <CheckCircle2 className="size-4 text-income" />
-                ) : exportProgress.status === 'error' ? (
+                ) : activeProgress.status === 'error' ? (
                   <AlertCircle className="size-4 text-expense" />
                 ) : (
                   <Loader2 className="size-4 animate-spin text-primary" />
@@ -320,76 +479,41 @@ export function ExportDataCard() {
                 <span
                   className={cn(
                     'text-sm font-medium',
-                    exportProgress.status === 'complete' && 'text-income',
-                    exportProgress.status === 'error' && 'text-expense'
+                    activeProgress.status === 'complete' && 'text-income',
+                    activeProgress.status === 'error' && 'text-expense'
                   )}
                 >
-                  {exportProgress.message}
+                  {activeProgress.message}
                 </span>
               </div>
               <span className="text-sm font-medium tabular-nums text-muted-foreground">
-                {exportProgress.progress}%
+                {activeProgress.progress}%
               </span>
             </div>
             <ProgressBar
-              progress={exportProgress.progress}
-              status={exportProgress.status}
+              progress={activeProgress.progress}
+              status={activeProgress.status}
+              colorComplete={mode === 'import' ? 'bg-primary' : 'bg-income'}
+              glowComplete={mode === 'import' ? '--primary' : '--income'}
             />
           </div>
         )}
 
-        {/* Import Progress Section */}
-        {importProgress.status !== 'idle' && (
-          <div className="mb-5 animate-slide-up">
-            <div className="mb-2 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {importProgress.status === 'complete' ? (
-                  <CheckCircle2 className="size-4 text-income" />
-                ) : importProgress.status === 'error' ? (
-                  <AlertCircle className="size-4 text-expense" />
-                ) : (
-                  <Loader2 className="size-4 animate-spin text-primary" />
-                )}
-                <span
-                  className={cn(
-                    'text-sm font-medium',
-                    importProgress.status === 'complete' && 'text-income',
-                    importProgress.status === 'error' && 'text-expense'
-                  )}
-                >
-                  {importProgress.message}
-                </span>
-              </div>
-              <span className="text-sm font-medium tabular-nums text-muted-foreground">
-                {importProgress.progress}%
-              </span>
-            </div>
-            <ProgressBar
-              progress={importProgress.progress}
-              status={importProgress.status}
-              colorComplete="bg-primary"
-              glowComplete="--primary"
-            />
-          </div>
-        )}
-
-        {/* Action Buttons */}
-        <div className="flex gap-3">
-          {/* Export Button */}
+        {/* Action Button */}
+        {mode === 'export' ? (
           <button
             onClick={handleExport}
-            disabled={!canExport || isExporting || isImporting}
+            disabled={!canExport || isBusy}
             className={cn(
-              'relative flex-1 overflow-hidden rounded-xl py-3.5 font-medium',
+              'relative w-full overflow-hidden rounded-xl py-3.5 font-medium',
               'transition-all duration-300',
               'disabled:cursor-not-allowed disabled:opacity-50',
-              canExport && !isExporting && !isImporting
+              canExport && !isBusy
                 ? 'bg-linear-to-r from-income to-primary text-white shadow-lg shadow-income/25 hover:shadow-xl hover:shadow-income/30 active:scale-[0.98]'
                 : 'bg-muted text-muted-foreground'
             )}
           >
-            {/* Button shimmer effect */}
-            {canExport && !isExporting && !isImporting && (
+            {canExport && !isBusy && (
               <div
                 className="absolute inset-0 opacity-30"
                 style={{
@@ -400,7 +524,6 @@ export function ExportDataCard() {
                 }}
               />
             )}
-
             <span className="relative flex items-center justify-center gap-2">
               {isExporting ? (
                 <>
@@ -410,32 +533,30 @@ export function ExportDataCard() {
               ) : exportProgress.status === 'complete' ? (
                 <>
                   <CheckCircle2 className="size-5" />
-                  <span>สำเร็จ!</span>
+                  <span>ส่งออกสำเร็จ!</span>
                 </>
               ) : (
                 <>
                   <FolderDown className="size-5" />
-                  <span>ส่งออก</span>
+                  <span>ส่งออกไฟล์ Excel</span>
                 </>
               )}
             </span>
           </button>
-
-          {/* Import Button */}
+        ) : (
           <button
             onClick={handleImportClick}
-            disabled={isExporting || isImporting}
+            disabled={isBusy}
             className={cn(
-              'relative flex-1 overflow-hidden rounded-xl py-3.5 font-medium',
+              'relative w-full overflow-hidden rounded-xl py-3.5 font-medium',
               'transition-all duration-300',
               'disabled:cursor-not-allowed disabled:opacity-50',
-              !isExporting && !isImporting
+              !isBusy
                 ? 'bg-linear-to-r from-primary to-[oklch(0.55_0.18_260)] text-white shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 active:scale-[0.98]'
                 : 'bg-muted text-muted-foreground'
             )}
           >
-            {/* Button shimmer effect */}
-            {!isExporting && !isImporting && (
+            {!isBusy && (
               <div
                 className="absolute inset-0 opacity-20"
                 style={{
@@ -446,7 +567,6 @@ export function ExportDataCard() {
                 }}
               />
             )}
-
             <span className="relative flex items-center justify-center gap-2">
               {isImporting ? (
                 <>
@@ -456,17 +576,24 @@ export function ExportDataCard() {
               ) : importProgress.status === 'complete' ? (
                 <>
                   <CheckCircle2 className="size-5" />
-                  <span>สำเร็จ!</span>
+                  <span>นำเข้าสำเร็จ!</span>
                 </>
               ) : (
                 <>
                   <FileUp className="size-5" />
-                  <span>นำเข้า</span>
+                  <span>เลือกไฟล์และนำเข้า</span>
                 </>
               )}
             </span>
           </button>
-        </div>
+        )}
+
+        {/* Helper text */}
+        {mode === 'export' && !canExport && (
+          <p className="mt-3 text-center text-xs text-muted-foreground">
+            ไม่มีข้อมูลรายการให้ส่งออก
+          </p>
+        )}
 
         {/* Hidden file input */}
         <input
@@ -476,13 +603,6 @@ export function ExportDataCard() {
           onChange={handleFileChange}
           className="hidden"
         />
-
-        {/* Helper text */}
-        {!canExport && (
-          <p className="mt-3 text-center text-xs text-muted-foreground">
-            ไม่มีข้อมูลรายการให้ส่งออก
-          </p>
-        )}
       </CardContent>
 
       {/* Shimmer keyframes */}
