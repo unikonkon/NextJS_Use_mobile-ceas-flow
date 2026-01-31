@@ -84,7 +84,7 @@ function createWalletSheets(
 
     const data: unknown[][] = [
       // Header info
-      [`กระเป๋าเงิน: ${wallet.name}`],
+      [`กระเป๋าเงิน: ${wallet.icon || ''} ${wallet.name}`],
       [`ประเภท: ${wallet.type}`],
       [`ยอดเริ่มต้น: ฿${formatCurrency(wallet.initialBalance)}`],
       [],
@@ -95,7 +95,7 @@ function createWalletSheets(
       ['ยอดคงเหลือ', `฿${formatCurrency(totalIncome - totalExpense)}`],
       [],
       // Transaction header
-      ['วันที่', 'ประเภท', 'หมวดหมู่', 'จำนวนเงิน', 'หมายเหตุ'],
+      ['วันที่', 'ประเภท', 'ไอคอน', 'หมวดหมู่', 'จำนวนเงิน', 'หมายเหตุ'],
     ];
 
     // Add transactions
@@ -103,6 +103,7 @@ function createWalletSheets(
       data.push([
         formatDate(t.date),
         t.type === 'income' ? 'รายรับ' : 'รายจ่าย',
+        t.category.icon || '',
         t.category.name,
         t.type === 'income' ? t.amount : -t.amount,
         t.note || '',
@@ -174,7 +175,7 @@ function createMonthlySheets(
       ['ยอดคงเหลือ', `฿${formatCurrency(totalIncome - totalExpense)}`],
       [],
       // Transaction header
-      ['วันที่', 'ประเภท', 'หมวดหมู่', 'กระเป๋าเงิน', 'จำนวนเงิน', 'หมายเหตุ'],
+      ['วันที่', 'ประเภท', 'ไอคอน', 'หมวดหมู่', 'กระเป๋าเงิน', 'จำนวนเงิน', 'หมายเหตุ'],
     ];
 
     // Add transactions
@@ -182,6 +183,7 @@ function createMonthlySheets(
       data.push([
         formatDate(t.date),
         t.type === 'income' ? 'รายรับ' : 'รายจ่าย',
+        t.category.icon || '',
         t.category.name,
         t.wallet?.name || '-',
         t.type === 'income' ? t.amount : -t.amount,
@@ -210,7 +212,7 @@ function createCategorySheets(
     ['สรุปตามหมวดหมู่'],
     [],
     ['=== รายจ่าย ==='],
-    ['หมวดหมู่', 'จำนวนรายการ', 'ยอดรวม'],
+    ['ไอคอน', 'หมวดหมู่', 'จำนวนรายการ', 'ยอดรวม'],
   ];
 
   const expenseCategories = categories.filter((c) => c.type === 'expense');
@@ -221,20 +223,20 @@ function createCategorySheets(
     const catTransactions = transactions.filter((t) => t.categoryId === cat.id);
     const total = catTransactions.reduce((sum, t) => sum + t.amount, 0);
     if (catTransactions.length > 0) {
-      summaryData.push([cat.name, catTransactions.length, -total]);
+      summaryData.push([cat.icon || '', cat.name, catTransactions.length, -total]);
     }
   });
 
   summaryData.push([]);
   summaryData.push(['=== รายรับ ===']);
-  summaryData.push(['หมวดหมู่', 'จำนวนรายการ', 'ยอดรวม']);
+  summaryData.push(['ไอคอน', 'หมวดหมู่', 'จำนวนรายการ', 'ยอดรวม']);
 
   // Add income categories summary
   incomeCategories.forEach((cat) => {
     const catTransactions = transactions.filter((t) => t.categoryId === cat.id);
     const total = catTransactions.reduce((sum, t) => sum + t.amount, 0);
     if (catTransactions.length > 0) {
-      summaryData.push([cat.name, catTransactions.length, total]);
+      summaryData.push([cat.icon || '', cat.name, catTransactions.length, total]);
     }
   });
 
@@ -259,7 +261,7 @@ function createCategorySheets(
 
     const data: unknown[][] = [
       // Header info
-      [`หมวดหมู่: ${cat.name}`],
+      [`หมวดหมู่: ${cat.icon || ''} ${cat.name}`],
       [`ประเภท: ${typeLabel}`],
       [`จำนวนรายการ: ${sorted.length} รายการ`],
       [],
@@ -322,7 +324,7 @@ function createOverviewSheet(
     ['ยอดคงเหลือสุทธิ', `฿${formatCurrency(totalIncome - totalExpense)}`],
     [],
     ['สรุปตามกระเป๋าเงิน'],
-    ['กระเป๋าเงิน', 'รายรับ', 'รายจ่าย', 'ยอดคงเหลือ'],
+    ['ไอคอน', 'กระเป๋าเงิน', 'รายรับ', 'รายจ่าย', 'ยอดคงเหลือ'],
   ];
 
   // Add wallet summaries
@@ -336,6 +338,7 @@ function createOverviewSheet(
       .reduce((sum, t) => sum + t.amount, 0);
 
     data.push([
+      wallet.icon || '',
       wallet.name,
       `฿${formatCurrency(income)}`,
       `฿${formatCurrency(expense)}`,
