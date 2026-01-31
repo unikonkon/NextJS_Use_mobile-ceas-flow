@@ -22,13 +22,19 @@ export interface ExportProgress {
 // Helper Functions
 // ============================================
 
-// Format date to Thai locale
+// Format date to Thai locale with time
 function formatDate(date: Date): string {
-  return date.toLocaleDateString('th-TH', {
+  const datePart = date.toLocaleDateString('th-TH', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
   });
+  const timePart = date.toLocaleTimeString('th-TH', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+  return `${datePart} ${timePart}`;
 }
 
 // Format date for sheet name (YYYY-MM)

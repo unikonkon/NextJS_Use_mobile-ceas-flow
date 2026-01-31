@@ -57,7 +57,7 @@ function parseThaiDate(dateStr: string): Date | null {
 
   const trimmed = dateStr.trim();
 
-  // Format: "1 ม.ค. 2569"
+  // Format: "1 ม.ค. 2569" or "1 ม.ค. 2569 14:30"
   const parts = trimmed.split(/\s+/);
   if (parts.length < 3) return null;
 
@@ -73,7 +73,16 @@ function parseThaiDate(dateStr: string): Date | null {
   // Convert Thai Buddhist Era to CE
   const ceYear = thaiYear - 543;
 
-  return new Date(ceYear, month, day);
+  // Parse optional time part (HH:MM)
+  let hours = 0;
+  let minutes = 0;
+  if (parts.length >= 4 && parts[3].includes(':')) {
+    const timeParts = parts[3].split(':');
+    hours = parseInt(timeParts[0], 10) || 0;
+    minutes = parseInt(timeParts[1], 10) || 0;
+  }
+
+  return new Date(ceYear, month, day, hours, minutes);
 }
 
 // ============================================

@@ -16,6 +16,7 @@ import {
   Banknote,
   PiggyBank,
   Check,
+  Plus,
 } from 'lucide-react';
 
 interface WalletPickerModalProps {
@@ -25,6 +26,7 @@ interface WalletPickerModalProps {
   selectedWalletId: string | null;
   walletBalances: Record<string, WalletBalance>;
   onSelect: (walletId: string) => void;
+  onCreateWallet?: () => void;
 }
 
 // Map wallet icons
@@ -42,6 +44,7 @@ export function WalletPickerModal({
   selectedWalletId,
   walletBalances,
   onSelect,
+  onCreateWallet,
 }: WalletPickerModalProps) {
   const handleSelect = (walletId: string) => {
     onSelect(walletId);
@@ -65,70 +68,99 @@ export function WalletPickerModal({
         </SheetHeader>
 
         <div className="px-3 pb-6 pt-3 space-y-1.5 overflow-y-auto flex-1">
-          {wallets.map((wallet) => {
-            const isSelected = wallet.id === selectedWalletId;
-            const balance = walletBalances[wallet.id]?.balance ?? 0;
-
-            return (
-              <button
-                key={wallet.id}
-                onClick={() => handleSelect(wallet.id)}
-                className={cn(
-                  'w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200',
-                  'hover:bg-muted/60 active:scale-[0.98]',
-                  isSelected && 'bg-primary/10 ring-2 ring-primary/30'
-                )}
-              >
-                {/* Icon */}
-                <div
+          {wallets.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="flex size-20 items-center justify-center rounded-3xl bg-muted/50 text-5xl mb-4">
+                💰
+              </div>
+              <h4 className="font-semibold text-foreground mb-1">
+                ยังไม่มีกระเป๋าเงิน
+              </h4>
+              <p className="text-sm text-muted-foreground mb-5">
+                สร้างกระเป๋าเงินก่อนเพื่อเริ่มบันทึกรายการ
+              </p>
+              {onCreateWallet && (
+                <button
+                  onClick={() => {
+                    onOpenChange(false);
+                    onCreateWallet();
+                  }}
                   className={cn(
-                    'flex items-center justify-center size-10 rounded-xl',
-                    'bg-linear-to-br shadow-sm',
-                    isSelected
-                      ? 'from-primary/20 to-primary/10 text-primary'
-                      : 'from-muted to-muted/50 text-muted-foreground'
+                    'flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm text-white transition-all',
+                    'bg-primary hover:bg-primary/90 active:scale-95 shadow-lg shadow-primary/25'
                   )}
-                  style={
-                    wallet.color
-                      ? {
-                        background: `linear-gradient(135deg, ${wallet.color}20, ${wallet.color}10)`,
-                        color: wallet.color,
-                      }
-                      : undefined
-                  }
                 >
-                  {wallet.icon || <WalletIcon className="size-5" />}
-                </div>
+                  <Plus className="size-4" />
+                  สร้างกระเป๋าเงิน
+                </button>
+              )}
+            </div>
+          ) : (
+            wallets.map((wallet) => {
+              const isSelected = wallet.id === selectedWalletId;
+              const balance = walletBalances[wallet.id]?.balance ?? 0;
 
-                {/* Wallet Info */}
-                <div className="flex-1 text-left">
-                  <p
+              return (
+                <button
+                  key={wallet.id}
+                  onClick={() => handleSelect(wallet.id)}
+                  className={cn(
+                    'w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200',
+                    'hover:bg-muted/60 active:scale-[0.98]',
+                    isSelected && 'bg-primary/10 ring-2 ring-primary/30'
+                  )}
+                >
+                  {/* Icon */}
+                  <div
                     className={cn(
-                      'font-medium text-sm truncate max-w-[280px]',
-                      isSelected ? 'text-foreground' : 'text-foreground/80'
+                      'flex items-center justify-center size-10 rounded-xl',
+                      'bg-linear-to-br shadow-sm',
+                      isSelected
+                        ? 'from-primary/20 to-primary/10 text-primary'
+                        : 'from-muted to-muted/50 text-muted-foreground'
                     )}
+                    style={
+                      wallet.color
+                        ? {
+                          background: `linear-gradient(135deg, ${wallet.color}20, ${wallet.color}10)`,
+                          color: wallet.color,
+                        }
+                        : undefined
+                    }
                   >
-                    {wallet.name}
-                  </p>
-                  <p
-                    className={cn(
-                      'text-xs font-numbers',
-                      balance >= 0 ? 'text-income' : 'text-expense'
-                    )}
-                  >
-                    {formatCurrency(balance)}
-                  </p>
-                </div>
-
-                {/* Selected Indicator */}
-                {isSelected && (
-                  <div className="flex items-center justify-center size-6 rounded-full bg-primary text-primary-foreground">
-                    <Check className="size-3.5" strokeWidth={3} />
+                    {wallet.icon || <WalletIcon className="size-5" />}
                   </div>
-                )}
-              </button>
-            );
-          })}
+
+                  {/* Wallet Info */}
+                  <div className="flex-1 text-left">
+                    <p
+                      className={cn(
+                        'font-medium text-sm truncate max-w-[280px]',
+                        isSelected ? 'text-foreground' : 'text-foreground/80'
+                      )}
+                    >
+                      {wallet.name}
+                    </p>
+                    <p
+                      className={cn(
+                        'text-xs font-numbers',
+                        balance >= 0 ? 'text-income' : 'text-expense'
+                      )}
+                    >
+                      {formatCurrency(balance)}
+                    </p>
+                  </div>
+
+                  {/* Selected Indicator */}
+                  {isSelected && (
+                    <div className="flex items-center justify-center size-6 rounded-full bg-primary text-primary-foreground">
+                      <Check className="size-3.5" strokeWidth={3} />
+                    </div>
+                  )}
+                </button>
+              );
+            })
+          )}
         </div>
       </SheetContent>
     </Sheet>

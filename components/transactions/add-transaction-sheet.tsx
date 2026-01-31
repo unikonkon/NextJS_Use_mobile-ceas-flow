@@ -38,6 +38,7 @@ interface AddTransactionSheetProps {
   // Controlled mode props
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  onCreateWallet?: () => void;
 }
 
 export function AddTransactionSheet({
@@ -47,6 +48,7 @@ export function AddTransactionSheet({
   onSubmit,
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange,
+  onCreateWallet,
 }: AddTransactionSheetProps) {
   const [internalOpen, setInternalOpen] = useState(false);
 
@@ -354,6 +356,8 @@ export function AddTransactionSheet({
               onBackspace={calculator.handleBackspace}
               onSubmit={handleSubmit}
               showSparkle={true}
+              hasWallet={hasWallet}
+              onCreateWallet={onCreateWallet}
             />
           )}
         </div>
@@ -374,6 +378,7 @@ export function AddTransactionSheet({
           selectedWalletId={localWalletId}
           walletBalances={walletBalances}
           onSelect={handleWalletSelect}
+          onCreateWallet={onCreateWallet}
         />
       </SheetContent>
     </Sheet>

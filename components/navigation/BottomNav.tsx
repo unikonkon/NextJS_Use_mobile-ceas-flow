@@ -192,6 +192,10 @@ export function BottomNav({ activeTab, analyticsSubTab, onTabChange }: BottomNav
             onSubmit={addTransaction}
             open={sheetOpen}
             onOpenChange={setSheetOpen}
+            onCreateWallet={() => {
+              setSheetOpen(false);
+              onTabChange('wallets');
+            }}
           />
         </div>
 
