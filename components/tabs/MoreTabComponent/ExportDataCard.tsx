@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import {
@@ -8,12 +8,16 @@ import {
   type ExportProgress,
   type ExportData,
 } from '@/lib/utils/excel-export';
+import {
+  importFromExcel,
+  type ImportProgress,
+  type ImportDependencies,
+} from '@/lib/utils/excel-import';
 import { useTransactionStore } from '@/lib/stores/transaction-store';
 import { useWalletStore } from '@/lib/stores/wallet-store';
 import { useCategoryStore } from '@/lib/stores/category-store';
 import {
   FileSpreadsheet,
-  Download,
   CheckCircle2,
   AlertCircle,
   Loader2,
@@ -22,31 +26,42 @@ import {
   Wallet,
   Tags,
   FileText,
+  FileUp,
 } from 'lucide-react';
 
 // Progress bar component with animated segments
-function ExportProgressBar({
+function ProgressBar({
   progress,
   status,
+  colorComplete = 'bg-income',
+  colorError = 'bg-expense',
+  colorActive = 'bg-primary',
+  glowComplete = '--income',
 }: {
   progress: number;
-  status: ExportProgress['status'];
+  status: string;
+  colorComplete?: string;
+  colorError?: string;
+  colorActive?: string;
+  glowComplete?: string;
 }) {
   const getBarColor = () => {
     switch (status) {
       case 'complete':
-        return 'bg-income';
+        return colorComplete;
       case 'error':
-        return 'bg-expense';
+        return colorError;
       default:
-        return 'bg-primary';
+        return colorActive;
     }
   };
+
+  const isActive = status !== 'complete' && status !== 'error' && status !== 'idle';
 
   return (
     <div className="relative h-2 w-full overflow-hidden rounded-full bg-muted/50">
       {/* Animated background shimmer */}
-      {status !== 'complete' && status !== 'error' && status !== 'idle' && (
+      {isActive && (
         <div
           className="absolute inset-0 animate-pulse"
           style={{
@@ -66,7 +81,7 @@ function ExportProgressBar({
         style={{
           width: `${progress}%`,
           boxShadow:
-            status === 'complete' ? '0 0 12px var(--income)' : undefined,
+            status === 'complete' ? `0 0 12px var(${glowComplete})` : undefined,
         }}
       />
     </div>
@@ -140,14 +155,25 @@ export function ExportDataCard() {
     progress: 0,
     message: '',
   });
+  const [importProgress, setImportProgress] = useState<ImportProgress>({
+    status: 'idle',
+    progress: 0,
+    message: '',
+  });
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const transactions = useTransactionStore((s) => s.transactions);
+  const addTransaction = useTransactionStore((s) => s.addTransaction);
   const wallets = useWalletStore((s) => s.wallets);
-  const { expenseCategories, incomeCategories } = useCategoryStore();
+  const addWallet = useWalletStore((s) => s.addWallet);
+  const { expenseCategories, incomeCategories, addCategory, getAllCategories } = useCategoryStore();
 
   const allCategories = [...expenseCategories, ...incomeCategories];
   const isExporting =
     exportProgress.status !== 'idle' && exportProgress.status !== 'complete' && exportProgress.status !== 'error';
+  const isImporting =
+    importProgress.status !== 'idle' && importProgress.status !== 'complete' && importProgress.status !== 'error';
 
   const handleExport = useCallback(async () => {
     if (isExporting) return;
@@ -173,6 +199,45 @@ export function ExportDataCard() {
     }
   }, [isExporting, transactions, wallets, allCategories]);
 
+  const handleImportClick = useCallback(() => {
+    if (isImporting) return;
+    fileInputRef.current?.click();
+  }, [isImporting]);
+
+  const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Reset file input so same file can be selected again
+    e.target.value = '';
+
+    const deps: ImportDependencies = {
+      existingWallets: useWalletStore.getState().wallets.map((w) => ({ id: w.id, name: w.name })),
+      findCategoryByName: (name: string, type: 'income' | 'expense') => {
+        const cats = getAllCategories();
+        return cats.find((c) => c.name === name && c.type === type);
+      },
+      addCategory,
+      addWallet,
+      getWallets: () => useWalletStore.getState().wallets.map((w) => ({ id: w.id, name: w.name })),
+      addTransaction,
+    };
+
+    try {
+      await importFromExcel(file, deps, setImportProgress);
+
+      // Reset after success
+      setTimeout(() => {
+        setImportProgress({ status: 'idle', progress: 0, message: '' });
+      }, 4000);
+    } catch {
+      // Reset after error
+      setTimeout(() => {
+        setImportProgress({ status: 'idle', progress: 0, message: '' });
+      }, 4000);
+    }
+  }, [getAllCategories, addCategory, addWallet, addTransaction]);
+
   const canExport = transactions.length > 0;
 
   return (
@@ -194,7 +259,7 @@ export function ExportDataCard() {
               <FileSpreadsheet className="size-6 text-income" />
             </div>
             {/* Pulse indicator when can export */}
-            {canExport && exportProgress.status === 'idle' && (
+            {canExport && exportProgress.status === 'idle' && importProgress.status === 'idle' && (
               <div className="absolute -right-0.5 -top-0.5 size-3">
                 <span className="absolute inline-flex size-full animate-ping rounded-full bg-income opacity-75" />
                 <span className="relative inline-flex size-3 rounded-full bg-income" />
@@ -202,9 +267,9 @@ export function ExportDataCard() {
             )}
           </div>
           <div>
-            <h3 className="font-semibold text-foreground">ส่งออกข้อมูล Excel</h3>
+            <h3 className="font-semibold text-foreground">จัดการข้อมูล Excel</h3>
             <p className="text-xs text-muted-foreground">
-              บันทึกข้อมูลทั้งหมดเป็นไฟล์ .xlsx
+              ส่งออกและนำเข้าข้อมูลไฟล์ .xlsx
             </p>
           </div>
         </div>
@@ -240,7 +305,7 @@ export function ExportDataCard() {
           />
         </div>
 
-        {/* Progress Section */}
+        {/* Export Progress Section */}
         {exportProgress.status !== 'idle' && (
           <div className="mb-5 animate-slide-up">
             <div className="mb-2 flex items-center justify-between">
@@ -266,58 +331,151 @@ export function ExportDataCard() {
                 {exportProgress.progress}%
               </span>
             </div>
-            <ExportProgressBar
+            <ProgressBar
               progress={exportProgress.progress}
               status={exportProgress.status}
             />
           </div>
         )}
 
-        {/* Export Button */}
-        <button
-          onClick={handleExport}
-          disabled={!canExport || isExporting}
-          className={cn(
-            'relative w-full overflow-hidden rounded-xl py-3.5 font-medium',
-            'transition-all duration-300',
-            'disabled:cursor-not-allowed disabled:opacity-50',
-            canExport && !isExporting
-              ? 'bg-linear-to-r from-income to-primary text-white shadow-lg shadow-income/25 hover:shadow-xl hover:shadow-income/30 active:scale-[0.98]'
-              : 'bg-muted text-muted-foreground'
-          )}
-        >
-          {/* Button shimmer effect */}
-          {canExport && !isExporting && (
-            <div
-              className="absolute inset-0 opacity-30"
-              style={{
-                background:
-                  'linear-gradient(90deg, transparent 0%, white 50%, transparent 100%)',
-                backgroundSize: '200% 100%',
-                animation: 'shimmer 3s ease-in-out infinite',
-              }}
+        {/* Import Progress Section */}
+        {importProgress.status !== 'idle' && (
+          <div className="mb-5 animate-slide-up">
+            <div className="mb-2 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {importProgress.status === 'complete' ? (
+                  <CheckCircle2 className="size-4 text-income" />
+                ) : importProgress.status === 'error' ? (
+                  <AlertCircle className="size-4 text-expense" />
+                ) : (
+                  <Loader2 className="size-4 animate-spin text-primary" />
+                )}
+                <span
+                  className={cn(
+                    'text-sm font-medium',
+                    importProgress.status === 'complete' && 'text-income',
+                    importProgress.status === 'error' && 'text-expense'
+                  )}
+                >
+                  {importProgress.message}
+                </span>
+              </div>
+              <span className="text-sm font-medium tabular-nums text-muted-foreground">
+                {importProgress.progress}%
+              </span>
+            </div>
+            <ProgressBar
+              progress={importProgress.progress}
+              status={importProgress.status}
+              colorComplete="bg-primary"
+              glowComplete="--primary"
             />
-          )}
+          </div>
+        )}
 
-          <span className="relative flex items-center justify-center gap-2">
-            {isExporting ? (
-              <>
-                <Loader2 className="size-5 animate-spin" />
-                <span>กำลังส่งออก...</span>
-              </>
-            ) : exportProgress.status === 'complete' ? (
-              <>
-                <CheckCircle2 className="size-5" />
-                <span>ส่งออกสำเร็จ!</span>
-              </>
-            ) : (
-              <>
-                <FolderDown className="size-5" />
-                <span>ส่งออกไฟล์ Excel</span>
-              </>
+        {/* Action Buttons */}
+        <div className="flex gap-3">
+          {/* Export Button */}
+          <button
+            onClick={handleExport}
+            disabled={!canExport || isExporting || isImporting}
+            className={cn(
+              'relative flex-1 overflow-hidden rounded-xl py-3.5 font-medium',
+              'transition-all duration-300',
+              'disabled:cursor-not-allowed disabled:opacity-50',
+              canExport && !isExporting && !isImporting
+                ? 'bg-linear-to-r from-income to-primary text-white shadow-lg shadow-income/25 hover:shadow-xl hover:shadow-income/30 active:scale-[0.98]'
+                : 'bg-muted text-muted-foreground'
             )}
-          </span>
-        </button>
+          >
+            {/* Button shimmer effect */}
+            {canExport && !isExporting && !isImporting && (
+              <div
+                className="absolute inset-0 opacity-30"
+                style={{
+                  background:
+                    'linear-gradient(90deg, transparent 0%, white 50%, transparent 100%)',
+                  backgroundSize: '200% 100%',
+                  animation: 'shimmer 3s ease-in-out infinite',
+                }}
+              />
+            )}
+
+            <span className="relative flex items-center justify-center gap-2">
+              {isExporting ? (
+                <>
+                  <Loader2 className="size-5 animate-spin" />
+                  <span>กำลังส่งออก...</span>
+                </>
+              ) : exportProgress.status === 'complete' ? (
+                <>
+                  <CheckCircle2 className="size-5" />
+                  <span>สำเร็จ!</span>
+                </>
+              ) : (
+                <>
+                  <FolderDown className="size-5" />
+                  <span>ส่งออก</span>
+                </>
+              )}
+            </span>
+          </button>
+
+          {/* Import Button */}
+          <button
+            onClick={handleImportClick}
+            disabled={isExporting || isImporting}
+            className={cn(
+              'relative flex-1 overflow-hidden rounded-xl py-3.5 font-medium',
+              'transition-all duration-300',
+              'disabled:cursor-not-allowed disabled:opacity-50',
+              !isExporting && !isImporting
+                ? 'bg-linear-to-r from-primary to-[oklch(0.55_0.18_260)] text-white shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 active:scale-[0.98]'
+                : 'bg-muted text-muted-foreground'
+            )}
+          >
+            {/* Button shimmer effect */}
+            {!isExporting && !isImporting && (
+              <div
+                className="absolute inset-0 opacity-20"
+                style={{
+                  background:
+                    'linear-gradient(90deg, transparent 0%, white 50%, transparent 100%)',
+                  backgroundSize: '200% 100%',
+                  animation: 'shimmer 3s ease-in-out infinite',
+                }}
+              />
+            )}
+
+            <span className="relative flex items-center justify-center gap-2">
+              {isImporting ? (
+                <>
+                  <Loader2 className="size-5 animate-spin" />
+                  <span>กำลังนำเข้า...</span>
+                </>
+              ) : importProgress.status === 'complete' ? (
+                <>
+                  <CheckCircle2 className="size-5" />
+                  <span>สำเร็จ!</span>
+                </>
+              ) : (
+                <>
+                  <FileUp className="size-5" />
+                  <span>นำเข้า</span>
+                </>
+              )}
+            </span>
+          </button>
+        </div>
+
+        {/* Hidden file input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".xlsx,.xls"
+          onChange={handleFileChange}
+          className="hidden"
+        />
 
         {/* Helper text */}
         {!canExport && (
